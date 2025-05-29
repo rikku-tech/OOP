@@ -11,6 +11,13 @@ public class hello {
 		System.out.println("hello rikuuuuuu");
 		System.out.println("hello rikuuuuuu");
 		System.out.println("hello rikuuuuuu");
+		
+		
+		System.out.println("hello rikuuuuuu");
+		System.out.println("hello rikuuuuuu");
+		System.out.println("hello rikuuuuuu");
+		
+		
 
 	}
 }
