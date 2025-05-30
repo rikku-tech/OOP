@@ -32,7 +32,7 @@ public void actionPerformed(ActionEvent e) {
     frame.setIconImage(originalImage.getImage());
 
     frame.setLayout(null);
-    frame.setTitle("IM Project");
+    frame.setTitle("Bloc");
     frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     frame.setVisible(true);
     frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
