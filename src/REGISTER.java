@@ -26,7 +26,7 @@ public void actionPerformed(ActionEvent e) {
     // Close the main window
 	mainframe.setVisible(false);
     // Open a new window
-    ImageIcon originalImage = new ImageIcon("C:\\Users\\Marick\\eclipse-workspace\\PROJECT_IM\\src\\123.png\\");
+    ImageIcon originalImage = new ImageIcon("C:\\Users\\VON GABRIEL COSTUNA\\git\\OOP\\LOGO.png");
 
     JFrame frame = new JFrame("New Window");
     frame.setIconImage(originalImage.getImage());
