@@ -178,6 +178,23 @@ public class LOGIN extends JButton implements ActionListener {
         loginButton.setFocusPainted(false);
         loginButton.setBorderPainted(false);
         centerPanel.add(loginButton);
+        
+     // Back Button - placed below Login button
+        JButton backButton = new JButton("Back");
+        backButton.setBounds(350, 515, 300, 45);  // Same width and x as Login, y just below Login button
+        backButton.setBackground(Color.WHITE);
+        backButton.setForeground(new Color(138, 43, 226)); // Same purple color as Login button's background, for consistency
+        backButton.setFont(new Font("DM Sans", Font.BOLD, 16));
+        backButton.setFocusPainted(false);
+        backButton.setBorderPainted(false);
+        backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        centerPanel.add(backButton);
+
+        backButton.addActionListener(ev -> {
+            loginFrame.dispose();    // Close login frame
+            mainframe.setVisible(true);  // Show main frame again
+        });
+        
 
         JPanel wrapperPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         wrapperPanel.add(centerPanel);

@@ -15,7 +15,7 @@ class MAIN {
 
         // Create a panel to hold your UI components with absolute positioning
         JPanel centerPanel = new JPanel(null);
-        centerPanel.setPreferredSize(new Dimension(1000, 700)); // fixed panel size
+        centerPanel.setPreferredSize(new Dimension(1000, 700));
 
         // Add your components with absolute positions inside centerPanel
         JLabel logo = new JLabel(resizedIcon);
@@ -62,7 +62,7 @@ class MAIN {
         centerPanel.add(blocText);
         centerPanel.add(underText);
 
-        // Create wrapper panel with FlowLayout (centered)
+        // Create wrapper panel
         JPanel wrapperPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         wrapperPanel.add(centerPanel);
 
