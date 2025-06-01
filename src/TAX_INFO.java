@@ -4,10 +4,14 @@ import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import javax.imageio.ImageIO;
 
 public class TAX_INFO extends JFrame {
     private CircularImagePanel photoPanel;
+    private List<JTextField> formFields = new ArrayList<>();  // To hold all JTextFields in form
+    private boolean isEditing = false; // To track edit state
 
     public TAX_INFO() {
 
@@ -78,12 +82,13 @@ public class TAX_INFO extends JFrame {
         taxpayerName.setAlignmentX(Component.CENTER_ALIGNMENT);
         sidebarContentWrapper.add(taxpayerName);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 20)));
-
-        sidebarContentWrapper.add(createLabeledFieldSmall("Taxpayer TIN"));
+        
+        // Sidebar fields: Make sure these fields are NOT editable even when toggling edit mode
+        sidebarContentWrapper.add(createLabeledFieldSmall("Taxpayer TIN", false));
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 5)));
-        sidebarContentWrapper.add(createLabeledFieldSmall("Registering Office"));
+        sidebarContentWrapper.add(createLabeledFieldSmall("Registering Office", false));
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 5)));
-        sidebarContentWrapper.add(createLabeledFieldSmall("RDO Code"));
+        sidebarContentWrapper.add(createLabeledFieldSmall("RDO Code", false));
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 20)));
 
         sidebarContentWrapper.add(createSidebarButton("Taxpayer Information", true));
@@ -122,7 +127,14 @@ public class TAX_INFO extends JFrame {
         for (String label : labels) {
             gbc.gridx = col;
             gbc.gridy = row;
-            formPanel.add(createLabeledField(label), gbc);
+            JPanel labeledField = createLabeledField(label);
+            formPanel.add(labeledField, gbc);
+
+            // Get the JTextField inside the panel and add to formFields list
+            JTextField field = (JTextField) labeledField.getComponent(1);
+            field.setEditable(false); // disable editing initially
+            formFields.add(field);
+
             col++;
             if (col == 3) {
                 col = 0;
@@ -133,12 +145,25 @@ public class TAX_INFO extends JFrame {
         JButton editButton = new JButton("Edit");
         editButton.setBackground(new Color(138, 43, 226));
         editButton.setForeground(Color.WHITE);
+        editButton.setFocusPainted(false);
         editButton.setFont(new Font("Inter", Font.BOLD, 14));
         editButton.setPreferredSize(new Dimension(100, 35));
         gbc.gridx = 2;
         gbc.gridy = row + 1;
         gbc.anchor = GridBagConstraints.EAST;
         formPanel.add(editButton, gbc);
+
+        // Add Edit button action listener
+        editButton.addActionListener(e -> {
+            isEditing = !isEditing; // toggle edit mode
+
+            for (JTextField field : formFields) {
+                field.setEditable(isEditing);
+            }
+
+            // Optionally, change button text to "Save" or "Edit"
+            editButton.setText(isEditing ? "Save" : "Edit");
+        });
 
         add(formPanel, BorderLayout.CENTER);
 
@@ -181,7 +206,8 @@ public class TAX_INFO extends JFrame {
         return panel;
     }
 
-    private JPanel createLabeledFieldSmall(String labelText) {
+    // Modified method: accept a parameter to control editable state of sidebar fields (always false)
+    private JPanel createLabeledFieldSmall(String labelText, boolean editable) {
         JPanel panel = new JPanel(new BorderLayout(3, 3));
         panel.setBackground(Color.WHITE);
 
@@ -196,6 +222,7 @@ public class TAX_INFO extends JFrame {
         ));
         field.setPreferredSize(new Dimension(80, 18));
         field.setMaximumSize(new Dimension(80, 18));
+        field.setEditable(editable);  // sidebar fields NOT editable regardless of toggle
 
         panel.add(label, BorderLayout.NORTH);
         panel.add(field, BorderLayout.CENTER);
