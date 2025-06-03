@@ -4,12 +4,11 @@ import java.awt.event.*;
 
 public class LOGIN extends JButton implements ActionListener {
 
-    private JFrame mainframe; // Reference to the main window
+    private JFrame mainframe;
 
     public LOGIN(JFrame frame) {
         this.mainframe = frame;
 
-        // Set button properties
         setText("Login");
         setBounds(20, 600, 250, 100);
         setFocusable(false);
@@ -31,15 +30,12 @@ public class LOGIN extends JButton implements ActionListener {
 
         JPanel centerPanel = new JPanel(null);
         centerPanel.setPreferredSize(new Dimension(1000, 700));
-
         int panelWidth = 1000;
 
-        // Smaller logo centered
         JLabel logo = new JLabel(resizedIcon);
         logo.setBounds((panelWidth - 80) / 2, 100, 80, 80);
         centerPanel.add(logo);
 
-        // Welcome Text
         JLabel welcomeText = new JLabel("Welcome back!");
         welcomeText.setFont(new Font("DM Sans", Font.BOLD, 32));
         welcomeText.setForeground(Color.BLACK);
@@ -48,7 +44,6 @@ public class LOGIN extends JButton implements ActionListener {
         welcomeText.setBounds((panelWidth - welcomeWidth) / 2, 190, welcomeWidth + 10, 40);
         centerPanel.add(welcomeText);
 
-        // Subtitle text
         JLabel underText = new JLabel("Your Tax Info, Organized and Accessible.");
         underText.setFont(new Font("DM Sans", Font.PLAIN, 18));
         underText.setForeground(Color.GRAY);
@@ -57,7 +52,6 @@ public class LOGIN extends JButton implements ActionListener {
         underText.setBounds((panelWidth - underWidth) / 2, 230, underWidth + 10, 25);
         centerPanel.add(underText);
 
-        // Email Label and Field
         JLabel emailLabel = new JLabel("Email");
         emailLabel.setFont(new Font("DM Sans", Font.PLAIN, 14));
         emailLabel.setBounds(350, 280, 300, 20);
@@ -72,7 +66,6 @@ public class LOGIN extends JButton implements ActionListener {
                 super.paintComponent(g);
                 g2.dispose();
             }
-
             @Override
             protected void paintBorder(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -87,7 +80,6 @@ public class LOGIN extends JButton implements ActionListener {
         emailField.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
         centerPanel.add(emailField);
 
-        // Password Label and Field
         JLabel passwordLabel = new JLabel("Password");
         passwordLabel.setFont(new Font("DM Sans", Font.PLAIN, 14));
         passwordLabel.setBounds(350, 350, 300, 20);
@@ -102,7 +94,6 @@ public class LOGIN extends JButton implements ActionListener {
                 super.paintComponent(g);
                 g2.dispose();
             }
-
             @Override
             protected void paintBorder(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -116,8 +107,8 @@ public class LOGIN extends JButton implements ActionListener {
         passwordField.setOpaque(false);
         passwordField.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
         centerPanel.add(passwordField);
-
-     // Custom Icon for the checkbox
+        
+        // Custom Icon for the checkbox
         Icon customCheckIcon = new Icon() {
             private final int size = 16;
 
@@ -158,7 +149,9 @@ public class LOGIN extends JButton implements ActionListener {
             }
         };
 
-        // Create the checkbox with custom icon
+
+
+     // Create the checkbox with custom icon
         JCheckBox rememberMe = new JCheckBox("Remember me");
         rememberMe.setBounds(350, 420, 150, 30);
         rememberMe.setFont(new Font("DM Sans", Font.PLAIN, 14));
@@ -169,7 +162,7 @@ public class LOGIN extends JButton implements ActionListener {
         rememberMe.setSelectedIcon(customCheckIcon);
         centerPanel.add(rememberMe);
 
-        // Login Button
+        // ✅ Login Button — this is where the FIX happens
         JButton loginButton = new JButton("Login");
         loginButton.setBounds(350, 460, 300, 45);
         loginButton.setBackground(new Color(138, 43, 226));
@@ -178,12 +171,19 @@ public class LOGIN extends JButton implements ActionListener {
         loginButton.setFocusPainted(false);
         loginButton.setBorderPainted(false);
         centerPanel.add(loginButton);
-        
-     // Back Button - placed below Login button
+
+        // 🔥 Add working redirect to TAX_INFO
+        loginButton.addActionListener(ev -> {
+            // Here you could add actual credential checking if needed
+            loginFrame.dispose();  // Close login window
+            new TAX_INFO().setVisible(true);  // Redirect to TAX_INFO
+        });
+
+        // Back Button
         JButton backButton = new JButton("Back");
-        backButton.setBounds(350, 515, 300, 45);  // Same width and x as Login, y just below Login button
+        backButton.setBounds(350, 515, 300, 45);
         backButton.setBackground(Color.WHITE);
-        backButton.setForeground(new Color(138, 43, 226)); // Same purple color as Login button's background, for consistency
+        backButton.setForeground(new Color(138, 43, 226));
         backButton.setFont(new Font("DM Sans", Font.BOLD, 16));
         backButton.setFocusPainted(false);
         backButton.setBorderPainted(false);
@@ -191,10 +191,9 @@ public class LOGIN extends JButton implements ActionListener {
         centerPanel.add(backButton);
 
         backButton.addActionListener(ev -> {
-            loginFrame.dispose();    // Close login frame
-            mainframe.setVisible(true);  // Show main frame again
+            loginFrame.dispose();
+            mainframe.setVisible(true);
         });
-        
 
         JPanel wrapperPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         wrapperPanel.add(centerPanel);
@@ -211,4 +210,3 @@ public class LOGIN extends JButton implements ActionListener {
         });
     }
 }
-

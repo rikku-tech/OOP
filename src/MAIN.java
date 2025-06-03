@@ -2,7 +2,6 @@ import javax.swing.*;
 import java.awt.*;
 
 class MAIN {
-
     public static void main(String[] args) {
         JFrame frame = new JFrame();
 
@@ -22,8 +21,6 @@ class MAIN {
         logo.setBounds(400, 140, 200, 200);
         centerPanel.add(logo);
 
-        
-        
         LOGIN btn1 = new LOGIN(frame);
         REGISTER btn2 = new REGISTER(frame);
 

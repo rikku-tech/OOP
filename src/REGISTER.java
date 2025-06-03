@@ -21,7 +21,7 @@ public class REGISTER extends JButton implements ActionListener {
         try {
             String url = "jdbc:mysql://localhost:3306/employer_name";  // Change this
             String user = "root";  // Change this
-            String password = "02162005me";  // Change this
+            String password = "Vongabriel31!";  // Change this
             connection = DriverManager.getConnection(url, user, password);
         } catch (SQLException e) {
             e.printStackTrace();

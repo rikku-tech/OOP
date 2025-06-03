@@ -53,6 +53,32 @@ public class TAX_INFO extends JFrame {
         logoutButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         logoutButton.setPreferredSize(new Dimension(110, 30));
 
+        // Add logout button action listener
+        logoutButton.addActionListener(e -> {
+            try {
+                // Dispose the TAX_INFO window
+                TAX_INFO.this.dispose();
+                
+                // Ensure the new MAIN frame is created on the Event Dispatch Thread
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        // Call the MAIN page creation
+                        MAIN.main(new String[]{});
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(null, 
+                            "Failed to redirect to the MAIN page.",
+                            "Logout Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                });
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, 
+                    "An unexpected error occurred during logout.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
         topPanel.add(logoPanel, BorderLayout.WEST);
         topPanel.add(logoutButton, BorderLayout.EAST);
         add(topPanel, BorderLayout.NORTH);
@@ -91,11 +117,50 @@ public class TAX_INFO extends JFrame {
         sidebarContentWrapper.add(createLabeledFieldSmall("RDO Code", false));
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 20)));
 
-        sidebarContentWrapper.add(createSidebarButton("Taxpayer Information", true));
+        JButton taxpayerInfoBtn = createSidebarButton("Taxpayer Information", true);
+        JButton otherInfoBtn = createSidebarButton("Other Information", false);
+        JButton businessInfoBtn = createSidebarButton("Business Information", false);
+
+        // Add navigation functionality
+        taxpayerInfoBtn.addActionListener(e -> {
+            // Already on TAX_INFO page, no action needed
+        });
+
+        otherInfoBtn.addActionListener(e -> {
+            dispose(); // Close current window
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    OTHER_INFO otherInfo = new OTHER_INFO();
+                    otherInfo.setVisible(true);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, 
+                        "Failed to open Other Information page.",
+                        "Navigation Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            });
+        });
+
+        businessInfoBtn.addActionListener(e -> {
+            dispose(); // Close current window
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    BUS_INFO businessInfo = new BUS_INFO();
+                    businessInfo.setVisible(true);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, 
+                        "Failed to open Business Information page.",
+                        "Navigation Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            });
+        });
+
+        sidebarContentWrapper.add(taxpayerInfoBtn);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 12)));
-        sidebarContentWrapper.add(createSidebarButton("Other Information", false));
+        sidebarContentWrapper.add(otherInfoBtn);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 12)));
-        sidebarContentWrapper.add(createSidebarButton("Business Information", false));
+        sidebarContentWrapper.add(businessInfoBtn);
 
         sidebar.add(sidebarContentWrapper, BorderLayout.NORTH);
         sidebar.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, Color.LIGHT_GRAY));
@@ -206,7 +271,6 @@ public class TAX_INFO extends JFrame {
         return panel;
     }
 
-    // Modified method: accept a parameter to control editable state of sidebar fields (always false)
     private JPanel createLabeledFieldSmall(String labelText, boolean editable) {
         JPanel panel = new JPanel(new BorderLayout(3, 3));
         panel.setBackground(Color.WHITE);
