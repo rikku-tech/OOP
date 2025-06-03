@@ -2,13 +2,32 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.Border;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Date;
 
 public class REGISTER extends JButton implements ActionListener {
 
     private JFrame mainframe;
+    private Connection connection;
 
     public REGISTER(JFrame frame) {
         mainframe = frame;
+        
+        
+        
+        try {
+            String url = "jdbc:mysql://localhost:3306/employer_name";  // Change this
+            String user = "root";  // Change this
+            String password = "02162005me";  // Change this
+            connection = DriverManager.getConnection(url, user, password);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(mainframe, "Failed to connect to database", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        
         setText("Create an Account");
         setBounds(300, 600, 250, 100);
         addActionListener(this);
@@ -40,6 +59,8 @@ public class REGISTER extends JButton implements ActionListener {
         JLabel title = new JLabel("Create a BLOC account", SwingConstants.CENTER);
         title.setFont(new Font("DM Sans", Font.BOLD, 25));
         contentPanel.add(title, gbc);
+        
+       
 
         gbc.gridwidth = 1;
         gbc.gridy++;
@@ -158,6 +179,78 @@ public class REGISTER extends JButton implements ActionListener {
         registerBtn.setRolloverEnabled(false);
         registerBtn.setPreferredSize(new Dimension(200, 40));
         contentPanel.add(registerBtn, gbc);
+        
+        registerBtn.addActionListener(ev -> {
+            try {
+                String tinVal = tin.getText().trim();
+                String fnameVal = fname.getText().trim();
+                String mnameVal = mname.getText().trim();
+                String lnameVal = lname.getText().trim();
+                String dobText = dob.getText().trim();
+                String civilVal = civil.getText().trim();
+                String genderVal = gender.getText().trim();
+                String emailVal = email.getText().trim();
+                String passwordVal = new String(password.getPassword());
+                String confirmVal = new String(confirm.getPassword());
+                String rdoCodeVal = rdoCode.getText().trim();
+
+                String taxpayerTypeVal = (String) taxpayerTypeDropdown.getSelectedItem();
+                String taxpayerClassificationVal = (String) taxpayerClassificationDropdown.getSelectedItem();
+                String motherMaidenVal = mothersMaidenName.getText().trim();
+                String fatherNameVal = fathersName.getText().trim();
+                String birRegDateText = birRegistrationDate.getText().trim();
+                String incomeTaxOptionVal = (String) incomeTaxDropdown.getSelectedItem();
+                String registeringOfficeVal = registeringOffice.getText().trim();
+                String philsysCardNumberVal = philsysCardNumber.getText().trim();
+                String placeOfBirthVal = placeOfBirth.getText().trim();
+                String tradeBusinessNameVal = tradeBusinessName.getText().trim();
+                String lineOfBusinessVal = lineOfBusiness.getText().trim();
+
+
+                if (!passwordVal.equals(confirmVal)) {
+                    JOptionPane.showMessageDialog(frame, "Passwords do not match.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                java.sql.Date dobDate = java.sql.Date.valueOf(dobText);
+                java.sql.Date birRegDate = java.sql.Date.valueOf(birRegDateText);
+
+                String fullName = fnameVal + " " + (mnameVal.isEmpty() ? "" : mnameVal + " ") + lnameVal;
+                fullName = fullName.trim();
+
+                int rdoCodeInt;
+                try {
+                    rdoCodeInt = Integer.parseInt(rdoCodeVal);
+                } catch (NumberFormatException nfe) {
+                    JOptionPane.showMessageDialog(frame, "RDO Code must be a valid number.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                boolean success = insertTaxpayerToDatabase(
+                	    tinVal, fullName, dobDate, civilVal, genderVal, emailVal, passwordVal, rdoCodeInt,
+                	    taxpayerTypeVal, taxpayerClassificationVal, motherMaidenVal, fatherNameVal,
+                	    birRegDate, incomeTaxOptionVal, registeringOfficeVal, philsysCardNumberVal, placeOfBirthVal,
+                	    citizenship.getText().trim(),       // add citizenship text
+                	    otherCitizenship.getText().trim()   // add otherCitizenship text
+                	);
+
+                boolean businessSuccess = insertBusinessToDatabase(tinVal, tradeBusinessNameVal, lineOfBusinessVal);
+
+
+
+                if (success && businessSuccess) {
+                    JOptionPane.showMessageDialog(frame, "Registration Successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    frame.dispose();
+                    mainframe.setVisible(true);
+                } else {
+                    JOptionPane.showMessageDialog(frame, "Registration failed. Try again.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (IllegalArgumentException ex) {
+                JOptionPane.showMessageDialog(frame, "Invalid Date Format. Use YYYY-MM-DD.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+
 
         // Back button below Register
         gbc.gridy++;
@@ -200,4 +293,82 @@ public class REGISTER extends JButton implements ActionListener {
         gbc.gridx = column + 1;
         panel.add(field, gbc);
     }
+    public boolean insertTaxpayerToDatabase(
+            String tin,
+            String fullName,
+            java.sql.Date dob,
+            String civilStatus,
+            String gender,
+            String email,
+            String password,
+            int rdoCode,
+            String taxpayerType,
+            String taxpayerClassification,
+            String motherMaidenName,
+            String fatherName,
+            java.sql.Date birRegistrationDate,
+            String incomeTaxOption,
+            String registeringOffice,
+            String philsysCardNumber,
+            String placeOfBirth,
+            String citizenship,           // new
+            String otherCitizenship       // new
+        ) {
+        try {
+            String sql = "INSERT INTO taxpayer (" +
+                         "TaxpayerTIN, TaxPayerName, DateOfBirth, CivilStatus, Gender, Email, Password, RdoCode, " +
+                         "TaxpayerType, TaxPayerClassification, MotherMaidenName, FatherName, BIRRegistrationDate, IncomeTaxRateOption, " +
+                         "RegisteringOffice, PhilsysCardNumber, PlaceOfBirth, Citizenship, OtherCitizenship) " +  // added columns
+                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";  // added placeholders
+
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, tin);
+            ps.setString(2, fullName);
+            ps.setDate(3, dob);
+            ps.setString(4, civilStatus);
+            ps.setString(5, gender);
+            ps.setString(6, email);
+            ps.setString(7, password);
+            ps.setInt(8, rdoCode);
+            ps.setString(9, taxpayerType);
+            ps.setString(10, taxpayerClassification);
+            ps.setString(11, motherMaidenName);
+            ps.setString(12, fatherName);
+            ps.setDate(13, birRegistrationDate);
+            ps.setString(14, incomeTaxOption);
+            ps.setString(15, registeringOffice);
+            ps.setString(16, philsysCardNumber);
+            ps.setString(17, placeOfBirth);
+            ps.setString(18, citizenship);        // set citizenship value
+            ps.setString(19, otherCitizenship);   // set otherCitizenship value
+
+            int rows = ps.executeUpdate();
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean insertBusinessToDatabase(String taxpayerTIN, String tradeBusinessName, String lineOfBusiness) {
+    	String BRN = "TEMP-" + System.currentTimeMillis();
+
+    	String sql = "INSERT INTO BussinessInfo (TaxPayerTIN, BussinessRegistrationNumber, TradeBusinessName, LineOfBusiness) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, taxpayerTIN);              // Foreign key
+            ps.setString(2, "BRN");                     // Placeholder for BussinessRegistrationNumber
+            ps.setString(3, tradeBusinessName);
+            ps.setString(4, lineOfBusiness);
+
+            int rows = ps.executeUpdate();
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+
+   
 }
