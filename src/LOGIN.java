@@ -162,7 +162,7 @@ public class LOGIN extends JButton implements ActionListener {
         rememberMe.setSelectedIcon(customCheckIcon);
         centerPanel.add(rememberMe);
 
-        // ✅ Login Button — this is where the FIX happens
+        // Login Button 
         JButton loginButton = new JButton("Login");
         loginButton.setBounds(350, 460, 300, 45);
         loginButton.setBackground(new Color(138, 43, 226));
@@ -172,7 +172,7 @@ public class LOGIN extends JButton implements ActionListener {
         loginButton.setBorderPainted(false);
         centerPanel.add(loginButton);
 
-        // 🔥 Add working redirect to TAX_INFO
+        // Add working redirect to TAX_INFO
         loginButton.addActionListener(ev -> {
             // Here you could add actual credential checking if needed
             loginFrame.dispose();  // Close login window

@@ -16,8 +16,6 @@ public class REGISTER extends JButton implements ActionListener {
     public REGISTER(JFrame frame) {
         mainframe = frame;
         
-        
-        
         try {
             String url = "jdbc:mysql://localhost:3306/employer_name";  // Change this
             String user = "root";  // Change this
@@ -55,17 +53,15 @@ public class REGISTER extends JButton implements ActionListener {
         // Title
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.gridwidth = 4; // title spans all columns
+        gbc.gridwidth = 4;
         JLabel title = new JLabel("Create a BLOC account", SwingConstants.CENTER);
         title.setFont(new Font("DM Sans", Font.BOLD, 25));
         contentPanel.add(title, gbc);
-        
-       
 
         gbc.gridwidth = 1;
         gbc.gridy++;
 
-        // First column fields
+        // Left column fields
         JTextField tin = new JTextField();
         JTextField rdoCode = new JTextField();
         JTextField fname = new JTextField();
@@ -80,10 +76,16 @@ public class REGISTER extends JButton implements ActionListener {
         JPasswordField password = new JPasswordField();
         JPasswordField confirm = new JPasswordField();
 
-        // Second column fields
+        // Right column fields
         JTextField registeringOffice = new JTextField();
-        JTextField tradeBusinessName = new JTextField();
         JTextField philsysCardNumber = new JTextField();
+        JTextField localResidence = new JTextField();
+        JTextField businessResidence = new JTextField();
+        JTextField fathersName = new JTextField();
+        JTextField mothersMaidenName = new JTextField();
+        JTextField birRegistrationDate = new JTextField();
+        JTextField citizenship = new JTextField();
+        JTextField otherCitizenship = new JTextField();
 
         String[] taxpayerTypes = {
             "Single Proprietorship Only (Resident Citizen)",
@@ -109,58 +111,50 @@ public class REGISTER extends JButton implements ActionListener {
         JComboBox<String> taxpayerClassificationDropdown = new JComboBox<>(taxpayerClassifications);
         taxpayerClassificationDropdown.setBackground(Color.WHITE);
 
-        JTextField lineOfBusiness = new JTextField();
-        JTextField fathersName = new JTextField();
-        JTextField mothersMaidenName = new JTextField();
-        JTextField birRegistrationDate = new JTextField();
-
         String[] incomeTaxOptions = {"Yes", "No"};
         JComboBox<String> incomeTaxDropdown = new JComboBox<>(incomeTaxOptions);
         incomeTaxDropdown.setBackground(Color.WHITE);
 
-        JTextField citizenship = new JTextField();
-        JTextField otherCitizenship = new JTextField();
-
         // Row counter starts at 1 after title
         int row = 1;
 
-        // Add rows according to your order
+        // Left column
         addLabeledField("TIN", tin, contentPanel, gbc, 0, row);
         addLabeledField("Registering Office", registeringOffice, contentPanel, gbc, 2, row++);
-        
+
         addLabeledField("RDO Code", rdoCode, contentPanel, gbc, 0, row);
-        addLabeledField("Trading Business Name", tradeBusinessName, contentPanel, gbc, 2, row++);
-        
-        addLabeledField("First Name", fname, contentPanel, gbc, 0, row);
         addLabeledField("Philsys Card Number", philsysCardNumber, contentPanel, gbc, 2, row++);
-        
-        addLabeledField("Middle Name", mname, contentPanel, gbc, 0, row);
+
+        addLabeledField("First Name", fname, contentPanel, gbc, 0, row);
         addLabeledField("Taxpayer Type", taxpayerTypeDropdown, contentPanel, gbc, 2, row++);
-        
-        addLabeledField("Last Name", lname, contentPanel, gbc, 0, row);
+
+        addLabeledField("Middle Name", mname, contentPanel, gbc, 0, row);
         addLabeledField("Taxpayer Classification", taxpayerClassificationDropdown, contentPanel, gbc, 2, row++);
-        
+
+        addLabeledField("Last Name", lname, contentPanel, gbc, 0, row);
+        addLabeledField("Local Residence", localResidence, contentPanel, gbc, 2, row++);
+
         addLabeledField("Suffix", suffix, contentPanel, gbc, 0, row);
-        addLabeledField("Line of Business", lineOfBusiness, contentPanel, gbc, 2, row++);
-        
+        addLabeledField("Business Residence", businessResidence, contentPanel, gbc, 2, row++);
+
         addLabeledField("Date of Birth", dob, contentPanel, gbc, 0, row);
         addLabeledField("Father's Name", fathersName, contentPanel, gbc, 2, row++);
-        
+
         addLabeledField("Place of Birth", placeOfBirth, contentPanel, gbc, 0, row);
         addLabeledField("Mother's Maiden Name", mothersMaidenName, contentPanel, gbc, 2, row++);
-        
+
         addLabeledField("Gender", gender, contentPanel, gbc, 0, row);
         addLabeledField("BIR Registration Date", birRegistrationDate, contentPanel, gbc, 2, row++);
-        
+
         addLabeledField("Civil Status", civil, contentPanel, gbc, 0, row);
         addLabeledField("Availing of the 8% income tax rate option?", incomeTaxDropdown, contentPanel, gbc, 2, row++);
-        
+
         addLabeledField("Email", email, contentPanel, gbc, 0, row);
         addLabeledField("Citizenship", citizenship, contentPanel, gbc, 2, row++);
-        
+
         addLabeledField("Password", password, contentPanel, gbc, 0, row);
         addLabeledField("Other Citizenship", otherCitizenship, contentPanel, gbc, 2, row++);
-        
+
         addLabeledField("Confirm Password", confirm, contentPanel, gbc, 0, row++);
 
         // Register button
@@ -203,9 +197,8 @@ public class REGISTER extends JButton implements ActionListener {
                 String registeringOfficeVal = registeringOffice.getText().trim();
                 String philsysCardNumberVal = philsysCardNumber.getText().trim();
                 String placeOfBirthVal = placeOfBirth.getText().trim();
-                String tradeBusinessNameVal = tradeBusinessName.getText().trim();
-                String lineOfBusinessVal = lineOfBusiness.getText().trim();
-
+                String localResidenceVal = localResidence.getText().trim();
+                String businessResidenceVal = businessResidence.getText().trim();
 
                 if (!passwordVal.equals(confirmVal)) {
                     JOptionPane.showMessageDialog(frame, "Passwords do not match.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -227,18 +220,14 @@ public class REGISTER extends JButton implements ActionListener {
                 }
 
                 boolean success = insertTaxpayerToDatabase(
-                	    tinVal, fullName, dobDate, civilVal, genderVal, emailVal, passwordVal, rdoCodeInt,
-                	    taxpayerTypeVal, taxpayerClassificationVal, motherMaidenVal, fatherNameVal,
-                	    birRegDate, incomeTaxOptionVal, registeringOfficeVal, philsysCardNumberVal, placeOfBirthVal,
-                	    citizenship.getText().trim(),       // add citizenship text
-                	    otherCitizenship.getText().trim()   // add otherCitizenship text
-                	);
+                    tinVal, fullName, dobDate, civilVal, genderVal, emailVal, passwordVal, rdoCodeInt,
+                    taxpayerTypeVal, taxpayerClassificationVal, motherMaidenVal, fatherNameVal,
+                    birRegDate, incomeTaxOptionVal, registeringOfficeVal, philsysCardNumberVal, placeOfBirthVal,
+                    citizenship.getText().trim(), otherCitizenship.getText().trim(),
+                    localResidenceVal, businessResidenceVal
+                );
 
-                boolean businessSuccess = insertBusinessToDatabase(tinVal, tradeBusinessNameVal, lineOfBusinessVal);
-
-
-
-                if (success && businessSuccess) {
+                if (success) {
                     JOptionPane.showMessageDialog(frame, "Registration Successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
                     frame.dispose();
                     mainframe.setVisible(true);
@@ -249,8 +238,6 @@ public class REGISTER extends JButton implements ActionListener {
                 JOptionPane.showMessageDialog(frame, "Invalid Date Format. Use YYYY-MM-DD.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
-
-
 
         // Back button below Register
         gbc.gridy++;
@@ -293,6 +280,7 @@ public class REGISTER extends JButton implements ActionListener {
         gbc.gridx = column + 1;
         panel.add(field, gbc);
     }
+
     public boolean insertTaxpayerToDatabase(
             String tin,
             String fullName,
@@ -311,15 +299,18 @@ public class REGISTER extends JButton implements ActionListener {
             String registeringOffice,
             String philsysCardNumber,
             String placeOfBirth,
-            String citizenship,           // new
-            String otherCitizenship       // new
+            String citizenship,
+            String otherCitizenship,
+            String localResidence,
+            String businessResidence
         ) {
         try {
             String sql = "INSERT INTO taxpayer (" +
                          "TaxpayerTIN, TaxPayerName, DateOfBirth, CivilStatus, Gender, Email, Password, RdoCode, " +
-                         "TaxpayerType, TaxPayerClassification, MotherMaidenName, FatherName, BIRRegistrationDate, IncomeTaxRateOption, " +
-                         "RegisteringOffice, PhilsysCardNumber, PlaceOfBirth, Citizenship, OtherCitizenship) " +  // added columns
-                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";  // added placeholders
+                         "TaxpayerType, TaxPayerClassification, MotherMaidenName, FatherName, BIRRegistrationDate, " +
+                         "IncomeTaxRateOption, RegisteringOffice, PhilsysCardNumber, PlaceOfBirth, Citizenship, " +
+                         "OtherCitizenship, LocalResidence, BusinessResidence) " +
+                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setString(1, tin);
@@ -339,8 +330,10 @@ public class REGISTER extends JButton implements ActionListener {
             ps.setString(15, registeringOffice);
             ps.setString(16, philsysCardNumber);
             ps.setString(17, placeOfBirth);
-            ps.setString(18, citizenship);        // set citizenship value
-            ps.setString(19, otherCitizenship);   // set otherCitizenship value
+            ps.setString(18, citizenship);
+            ps.setString(19, otherCitizenship);
+            ps.setString(20, localResidence);
+            ps.setString(21, businessResidence);
 
             int rows = ps.executeUpdate();
             return rows > 0;
@@ -349,26 +342,4 @@ public class REGISTER extends JButton implements ActionListener {
             return false;
         }
     }
-
-    public boolean insertBusinessToDatabase(String taxpayerTIN, String tradeBusinessName, String lineOfBusiness) {
-    	String BRN = "TEMP-" + System.currentTimeMillis();
-
-    	String sql = "INSERT INTO BussinessInfo (TaxPayerTIN, BussinessRegistrationNumber, TradeBusinessName, LineOfBusiness) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, taxpayerTIN);              // Foreign key
-            ps.setString(2, "BRN");                     // Placeholder for BussinessRegistrationNumber
-            ps.setString(3, tradeBusinessName);
-            ps.setString(4, lineOfBusiness);
-
-            int rows = ps.executeUpdate();
-            return rows > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-
-
-   
 }

@@ -175,7 +175,7 @@ public class TAX_INFO extends JFrame {
         String[] labels = {
             "Taxpayer Name", "Taxpayer Type", "Taxpayer Classification",
             "Registering Office", "BIR Registration Date", "Philsys Card Number",
-            "Trade Business Name", "Line of Business", "Availing of the 8% income tax rate option?",
+            "Local Residence", "Business Residence", "Availing of the 8% income tax rate option?",
             "Date of Birth", "Place of Birth", "Gender",
             "Civil Status", "Citizenship", "Other Citizenship",
             "Mother's Maiden Name", "Father's Name"
@@ -198,6 +198,7 @@ public class TAX_INFO extends JFrame {
             // Get the JTextField inside the panel and add to formFields list
             JTextField field = (JTextField) labeledField.getComponent(1);
             field.setEditable(false); // disable editing initially
+            field.setFocusable(false); // initially not focusable
             formFields.add(field);
 
             col++;
@@ -223,7 +224,13 @@ public class TAX_INFO extends JFrame {
             isEditing = !isEditing; // toggle edit mode
 
             for (JTextField field : formFields) {
-                field.setEditable(isEditing);
+                if (isEditing) {
+                    field.setEditable(true);
+                    field.setFocusable(true);
+                } else {
+                    field.setEditable(false);
+                    field.setFocusable(false);
+                }
             }
 
             // Optionally, change button text to "Save" or "Edit"
@@ -287,6 +294,7 @@ public class TAX_INFO extends JFrame {
         field.setPreferredSize(new Dimension(80, 18));
         field.setMaximumSize(new Dimension(80, 18));
         field.setEditable(editable);  // sidebar fields NOT editable regardless of toggle
+        field.setFocusable(false);  // sidebar fields should never be focusable
 
         panel.add(label, BorderLayout.NORTH);
         panel.add(field, BorderLayout.CENTER);

@@ -278,6 +278,7 @@ public class BUS_INFO extends JFrame {
                 JTextField textField = (JTextField) ((JPanel) fieldPanel.getComponent(1)).getComponent(0);
                 formFields.put(field, textField);
                 textField.setEditable(true); // Fields are editable in registration form
+                textField.setFocusable(true); // Fields are focusable in registration form
             }
             
             col++;
@@ -291,6 +292,26 @@ public class BUS_INFO extends JFrame {
         registerButton.setFocusPainted(false);
 
         registerButton.addActionListener(e -> {
+            // Transfer data from registration form to view panel
+            Map<String, String> fieldMapping = new HashMap<>();
+            fieldMapping.put("Business Registration Number", "Business Registration Number*");
+            fieldMapping.put("Single Business Number", "Single Business Number*");
+            fieldMapping.put("Industry Type", "Industry Type*");
+            fieldMapping.put("Trade Business Name", "Trade Business Name*");
+            fieldMapping.put("Regulatory Body", "Regulatory Body*");
+            fieldMapping.put("Business Registration Date", "Business Registration Date*");
+            fieldMapping.put("Line of Business", "Line of Business*");
+
+            // Copy values from registration form to view panel
+            for (Map.Entry<String, String> entry : fieldMapping.entrySet()) {
+                String viewField = entry.getKey();
+                String regField = entry.getValue();
+                if (formFields.containsKey(viewField) && formFields.containsKey(regField)) {
+                    String value = formFields.get(regField).getText();
+                    formFields.get(viewField).setText(value);
+                }
+            }
+            
             showPanel("VIEW");
         });
 
@@ -362,7 +383,7 @@ public class BUS_INFO extends JFrame {
                 toggleDeleteIcons(true);
                 toggleFieldsEditable(true);
             } else {
-                // Saving changes
+                // Update UI
                 isEditing = false;
                 editButton.setText("Edit");
                 toggleDeleteIcons(false);
@@ -408,26 +429,13 @@ public class BUS_INFO extends JFrame {
     }
 
     private void toggleFieldsEditable(boolean editable) {
-        for (Component comp : viewPanel.getComponents()) {
-            if (comp instanceof JPanel) {
-                JPanel formPanel = (JPanel) comp;
-                for (Component formComp : formPanel.getComponents()) {
-                    if (formComp instanceof JPanel) {
-                        JPanel fieldPanel = (JPanel) formComp;
-                        Component[] components = fieldPanel.getComponents();
-                        for (Component c : components) {
-                            if (c instanceof JPanel) {
-                                JPanel innerPanel = (JPanel) c;
-                                Component innerComp = innerPanel.getComponent(0);
-                                if (innerComp instanceof JTextField) {
-                                    ((JTextField) innerComp).setEditable(editable);
-                                } else if (innerComp instanceof JComboBox) {
-                                    ((JComboBox<?>) innerComp).setEnabled(editable);
-                                }
-                            }
-                        }
-                    }
-                }
+        for (JTextField field : formFields.values()) {
+            if (editable) {
+                field.setEditable(true);
+                field.setFocusable(true);
+            } else {
+                field.setEditable(false);
+                field.setFocusable(false);
             }
         }
     }
@@ -481,6 +489,7 @@ public class BUS_INFO extends JFrame {
         ));
         field.setPreferredSize(new Dimension(150, 30));
         field.setEditable(false);
+        field.setFocusable(false); // initially not focusable
 
         fieldPanel.add(field, BorderLayout.CENTER);
 
@@ -504,7 +513,13 @@ public class BUS_INFO extends JFrame {
         ));
         field.setPreferredSize(new Dimension(80, 18));
         field.setMaximumSize(new Dimension(80, 18));
-        field.setEditable(editable);
+            if (editable) {
+                field.setEditable(true);
+                field.setFocusable(true);
+            } else {
+                field.setEditable(false);
+                field.setFocusable(false);
+            }
 
         panel.add(label, BorderLayout.NORTH);
         panel.add(field, BorderLayout.CENTER);

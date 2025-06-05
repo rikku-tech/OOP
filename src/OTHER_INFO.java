@@ -237,7 +237,14 @@ public class OTHER_INFO extends JFrame {
             if (comp instanceof JPanel) {
                 for (Component inner : ((JPanel) comp).getComponents()) {
                     if (inner instanceof JTextField) {
-                        ((JTextField) inner).setEditable(editable);
+                        JTextField field = (JTextField) inner;
+                        if (editable) {
+                            field.setEditable(true);
+                            field.setFocusable(true);
+                        } else {
+                            field.setEditable(false);
+                            field.setFocusable(false);
+                        }
                     }
                 }
             }
@@ -260,6 +267,7 @@ public class OTHER_INFO extends JFrame {
         ));
         field.setPreferredSize(new Dimension(150, 30));
         field.setEditable(false);
+        field.setFocusable(false); // initially not focusable
 
         panel.add(label, BorderLayout.NORTH);
         panel.add(field, BorderLayout.CENTER);
@@ -281,7 +289,13 @@ public class OTHER_INFO extends JFrame {
         ));
         field.setPreferredSize(new Dimension(80, 18));
         field.setMaximumSize(new Dimension(80, 18));
-        field.setEditable(editable);
+            if (editable) {
+                field.setEditable(true);
+                field.setFocusable(true);
+            } else {
+                field.setEditable(false);
+                field.setFocusable(false);
+            }
 
         panel.add(label, BorderLayout.NORTH);
         panel.add(field, BorderLayout.CENTER);
