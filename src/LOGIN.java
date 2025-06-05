@@ -6,11 +6,13 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-
 public class LOGIN extends JButton implements ActionListener {
 
     private JFrame mainframe;
     public static String loggedInEmail = null;  // <-- static field to hold email
+    private final String DB_URL = "jdbc:mysql://localhost:3306/employer_name";
+    private final String DB_USER = "root";
+    private final String DB_PASSWORD = "Vongabriel31!";
 
     public LOGIN(JFrame frame) {
         this.mainframe = frame;
@@ -155,9 +157,7 @@ public class LOGIN extends JButton implements ActionListener {
             }
         };
 
-
-
-     // Create the checkbox with custom icon
+        // Create the checkbox with custom icon
         JCheckBox rememberMe = new JCheckBox("Remember me");
         rememberMe.setBounds(350, 420, 150, 30);
         rememberMe.setFont(new Font("DM Sans", Font.PLAIN, 14));
@@ -193,32 +193,43 @@ public class LOGIN extends JButton implements ActionListener {
                 Class.forName("com.mysql.cj.jdbc.Driver");
 
                 // Connect to your database
-                Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/employer_name", "root", "02162005me");
+                try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+                     PreparedStatement stmt = conn.prepareStatement("SELECT * FROM taxpayer WHERE email = ? AND password = ?")) {
+                    
+                    stmt.setString(1, email);
+                    stmt.setString(2, password);
 
-                // Prepare SQL query to check credentials
-                String sql = "SELECT * FROM taxpayer WHERE email = ? AND password = ?";
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                stmt.setString(1, email);
-                stmt.setString(2, password);
-
-                ResultSet rs = stmt.executeQuery();
-
-                if (rs.next()) {
-                    loggedInEmail = email;  // Store email for access by other classes
-                    loginFrame.dispose();
-                    new TAX_INFO(loggedInEmail).setVisible(true);  // Pass email here
-                } else {
-                    // No match found
-                    JOptionPane.showMessageDialog(loginFrame, "Invalid email or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next()) {
+                            loggedInEmail = email;  // Store email for access by other classes
+                            loginFrame.dispose();
+                            SwingUtilities.invokeLater(() -> {
+                                try {
+                                    TAX_INFO taxInfo = new TAX_INFO(loggedInEmail);
+                                    taxInfo.setVisible(true);
+                                } catch (Exception ex) {
+                                    JOptionPane.showMessageDialog(null,
+                                        "Failed to open Taxpayer Information page: " + ex.getMessage(),
+                                        "Navigation Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                                    mainframe.setVisible(true);
+                                }
+                            });
+                        } else {
+                            // No match found
+                            JOptionPane.showMessageDialog(loginFrame, 
+                                "Invalid email or password.", 
+                                "Login Failed", 
+                                JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
                 }
-
-                rs.close();
-                stmt.close();
-                conn.close();
-
             } catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(loginFrame, "Database error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(loginFrame, 
+                    "Database error: " + ex.getMessage(), 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -252,6 +263,4 @@ public class LOGIN extends JButton implements ActionListener {
             }
         });
     }
-    
 }
-

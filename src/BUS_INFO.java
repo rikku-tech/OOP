@@ -7,6 +7,7 @@ import java.io.File;
 import javax.imageio.ImageIO;
 import java.util.HashMap;
 import java.util.Map;
+import java.sql.*;
 
 public class BUS_INFO extends JFrame {
     private CircularImagePanel photoPanel;
@@ -17,8 +18,16 @@ public class BUS_INFO extends JFrame {
     private JPanel registrationFormPanel;
     private JPanel viewPanel;
     private Map<String, JTextField> formFields;
+    private JTextField tinFieldSidebar;
+    private JTextField registeringOfficeSidebar;
+    private JTextField rdoCodeSidebar;
+    private String userEmail;
+    private final String DB_URL = "jdbc:mysql://localhost:3306/employer_name";
+    private final String DB_USER = "root";
+    private final String DB_PASSWORD = "Vongabriel31!";
 
-    public BUS_INFO() {
+    public BUS_INFO(String email) {
+        this.userEmail = email;
         formFields = new HashMap<>();
         ImageIcon originalImage = new ImageIcon("C:\\Users\\VON GABRIEL COSTUNA\\git\\OOP\\LOGO.png");
 
@@ -87,24 +96,20 @@ public class BUS_INFO extends JFrame {
 
         // Add logout functionality
         logoutButton.addActionListener(e -> {
-            try {
-                dispose();
-                SwingUtilities.invokeLater(() -> {
-                    try {
-                        MAIN.main(new String[]{});
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(null, 
-                            "Failed to redirect to the MAIN page.",
-                            "Logout Error",
-                            JOptionPane.ERROR_MESSAGE);
-                    }
-                });
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(null, 
-                    "An unexpected error occurred during logout.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            }
+            dispose(); // Close current window
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    // Create and show new MAIN frame
+                    JFrame frame = new JFrame();
+                    MAIN.setupMainFrame(frame);
+                    frame.setVisible(true);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, 
+                        "Failed to return to main page.",
+                        "Logout Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            });
         });
 
         topPanel.add(logoPanel, BorderLayout.WEST);
@@ -140,12 +145,20 @@ public class BUS_INFO extends JFrame {
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 20)));
 
         // Sidebar fields
-        sidebarContentWrapper.add(createLabeledFieldSmall("Taxpayer TIN", false));
+        JPanel tinPanel = createLabeledFieldSmall("Taxpayer TIN", false);
+        sidebarContentWrapper.add(tinPanel);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 5)));
-        sidebarContentWrapper.add(createLabeledFieldSmall("Registering Office", false));
+        tinFieldSidebar = getTextFieldFromPanel(tinPanel);
+
+        JPanel regOfficePanel = createLabeledFieldSmall("Registering Office", false);
+        sidebarContentWrapper.add(regOfficePanel);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 5)));
-        sidebarContentWrapper.add(createLabeledFieldSmall("RDO Code", false));
+        registeringOfficeSidebar = getTextFieldFromPanel(regOfficePanel);
+
+        JPanel rdoPanel = createLabeledFieldSmall("RDO Code", false);
+        sidebarContentWrapper.add(rdoPanel);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 20)));
+        rdoCodeSidebar = getTextFieldFromPanel(rdoPanel);
 
         // Navigation buttons
         JButton taxpayerInfoBtn = createSidebarButton("Taxpayer Information", false);
@@ -157,7 +170,7 @@ public class BUS_INFO extends JFrame {
             dispose();
             SwingUtilities.invokeLater(() -> {
                 try {
-                    TAX_INFO taxInfo = new TAX_INFO();
+                    TAX_INFO taxInfo = new TAX_INFO(userEmail);
                     taxInfo.setVisible(true);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, 
@@ -172,7 +185,7 @@ public class BUS_INFO extends JFrame {
             dispose();
             SwingUtilities.invokeLater(() -> {
                 try {
-                    OTHER_INFO otherInfo = new OTHER_INFO();
+                    OTHER_INFO otherInfo = new OTHER_INFO(userEmail);
                     otherInfo.setVisible(true);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, 
@@ -292,27 +305,51 @@ public class BUS_INFO extends JFrame {
         registerButton.setFocusPainted(false);
 
         registerButton.addActionListener(e -> {
-            // Transfer data from registration form to view panel
-            Map<String, String> fieldMapping = new HashMap<>();
-            fieldMapping.put("Business Registration Number", "Business Registration Number*");
-            fieldMapping.put("Single Business Number", "Single Business Number*");
-            fieldMapping.put("Industry Type", "Industry Type*");
-            fieldMapping.put("Trade Business Name", "Trade Business Name*");
-            fieldMapping.put("Regulatory Body", "Regulatory Body*");
-            fieldMapping.put("Business Registration Date", "Business Registration Date*");
-            fieldMapping.put("Line of Business", "Line of Business*");
-
-            // Copy values from registration form to view panel
-            for (Map.Entry<String, String> entry : fieldMapping.entrySet()) {
-                String viewField = entry.getKey();
-                String regField = entry.getValue();
-                if (formFields.containsKey(viewField) && formFields.containsKey(regField)) {
-                    String value = formFields.get(regField).getText();
-                    formFields.get(viewField).setText(value);
+            // Validate required fields
+            for (String field : fields) {
+                if (field.contains("*")) {
+                    String value = formFields.get(field).getText().trim();
+                    if (value.isEmpty()) {
+                        JOptionPane.showMessageDialog(this, 
+                            "Please fill in all required fields marked with *",
+                            "Validation Error",
+                            JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
                 }
             }
-            
-            showPanel("VIEW");
+
+            // Save to database
+            boolean success = saveBusinessData();
+            if (success) {
+                // Transfer data from registration form to view panel
+                Map<String, String> fieldMapping = new HashMap<>();
+                fieldMapping.put("Business Registration Number", "Business Registration Number*");
+                fieldMapping.put("Single Business Number", "Single Business Number*");
+                fieldMapping.put("Industry Type", "Industry Type*");
+                fieldMapping.put("Trade Business Name", "Trade Business Name*");
+                fieldMapping.put("Regulatory Body", "Regulatory Body*");
+                fieldMapping.put("Business Registration Date", "Business Registration Date*");
+                fieldMapping.put("Line of Business", "Line of Business*");
+
+                // Copy values from registration form to view panel
+                for (Map.Entry<String, String> entry : fieldMapping.entrySet()) {
+                    String viewField = entry.getKey();
+                    String regField = entry.getValue();
+                    if (formFields.containsKey(viewField) && formFields.containsKey(regField)) {
+                        String value = formFields.get(regField).getText();
+                        formFields.get(viewField).setText(value);
+                    }
+                }
+                
+                JOptionPane.showMessageDialog(this, "Business registered successfully!");
+                showPanel("VIEW");
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    "Failed to register business. Please try again.",
+                    "Registration Error",
+                    JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         gbc.gridx = 2;
@@ -383,13 +420,22 @@ public class BUS_INFO extends JFrame {
                 toggleDeleteIcons(true);
                 toggleFieldsEditable(true);
             } else {
-                // Update UI
-                isEditing = false;
-                editButton.setText("Edit");
-                toggleDeleteIcons(false);
-                toggleFieldsEditable(false);
+                // Save changes to database
+                boolean success = saveBusinessData();
+                if (success) {
+                    isEditing = false;
+                    editButton.setText("Edit");
+                    toggleDeleteIcons(false);
+                    toggleFieldsEditable(false);
+                    JOptionPane.showMessageDialog(this, "Business data saved successfully.");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to save business data. Please try again.");
+                }
             }
         });
+
+        // Load initial data
+        loadBusinessData(userEmail);
 
         gbc.gridx = 2;
         gbc.gridy = row + 1;
@@ -576,10 +622,76 @@ public class BUS_INFO extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            BUS_INFO frame = new BUS_INFO();
-            frame.setVisible(true);
-        });
+    private JTextField getTextFieldFromPanel(JPanel panel) {
+        for (Component comp : panel.getComponents()) {
+            if (comp instanceof JTextField) {
+                return (JTextField) comp;
+            }
+        }
+        return null;
+    }
+
+    private void loadBusinessData(String email) {
+        String query = "SELECT * FROM taxpayer WHERE email = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, email);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                // Load sidebar info
+                tinFieldSidebar.setText(rs.getString("TaxpayerTIN"));
+                registeringOfficeSidebar.setText(rs.getString("RegisteringOffice"));
+                rdoCodeSidebar.setText(rs.getString("RDOCode"));
+
+                // Check if business data exists
+                if (rs.getString("BusinessRegistrationNumber") != null) {
+                    // Business exists, show view panel
+                    formFields.get("Business Registration Number").setText(rs.getString("BusinessRegistrationNumber"));
+                    formFields.get("Single Business Number").setText(rs.getString("SingleBusinessNumber"));
+                    formFields.get("Trade Business Name").setText(rs.getString("TradeBusinessName"));
+                    formFields.get("Regulatory Body").setText(rs.getString("RegulatoryBody"));
+                    formFields.get("Business Registration Date").setText(rs.getString("BusinessRegistrationDate"));
+                    formFields.get("Line of Business").setText(rs.getString("LineOfBusiness"));
+                    showPanel("VIEW");
+                } else {
+                    // No business registered, show initial panel
+                    showPanel("INITIAL");
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "No taxpayer found with email: " + email);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error loading business data: " + e.getMessage());
+        }
+    }
+
+    private boolean saveBusinessData() {
+        String updateQuery = "UPDATE taxpayer SET "
+                + "BusinessRegistrationNumber = ?, SingleBusinessNumber = ?, "
+                + "TradeBusinessName = ?, RegulatoryBody = ?, "
+                + "BusinessRegistrationDate = ?, LineOfBusiness = ? "
+                + "WHERE email = ?";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(updateQuery)) {
+
+            stmt.setString(1, formFields.get("Business Registration Number").getText());
+            stmt.setString(2, formFields.get("Single Business Number").getText());
+            stmt.setString(3, formFields.get("Trade Business Name").getText());
+            stmt.setString(4, formFields.get("Regulatory Body").getText());
+            stmt.setString(5, formFields.get("Business Registration Date").getText());
+            stmt.setString(6, formFields.get("Line of Business").getText());
+            stmt.setString(7, userEmail);
+
+            int updatedRows = stmt.executeUpdate();
+            return updatedRows > 0;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        }
     }
 }

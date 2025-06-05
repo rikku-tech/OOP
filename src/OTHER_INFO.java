@@ -5,12 +5,28 @@ import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
+import java.sql.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class OTHER_INFO extends JFrame {
     private CircularImagePanel photoPanel;
     private boolean isEditing = false;
+    private JTextField tinFieldSidebar;
+    private JPanel mainPanel;
+    private JTextField registeringOfficeSidebar;
+    private JTextField rdoCodeSidebar;
+    private String userEmail;
+    private final String DB_URL = "jdbc:mysql://localhost:3306/employer_name";
+    private final String DB_USER = "root";
+    private final String DB_PASSWORD = "Vongabriel31!";
+    private Map<String, JTextField> formFields;
 
-    public OTHER_INFO() {
+    public OTHER_INFO(String email) {
+        this.userEmail = email;
+        this.formFields = new HashMap<>();
         ImageIcon originalImage = new ImageIcon("C:\\Users\\VON GABRIEL COSTUNA\\git\\OOP\\LOGO.png");
 
         setTitle("Other Information");
@@ -52,28 +68,20 @@ public class OTHER_INFO extends JFrame {
 
         // Add logout functionality
         logoutButton.addActionListener(e -> {
-            try {
-                // Dispose the OTHER_INFO window
-                OTHER_INFO.this.dispose();
-                
-                // Ensure the new MAIN frame is created on the Event Dispatch Thread
-                SwingUtilities.invokeLater(() -> {
-                    try {
-                        // Call the MAIN page creation
-                        MAIN.main(new String[]{});
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(null, 
-                            "Failed to redirect to the MAIN page.",
-                            "Logout Error",
-                            JOptionPane.ERROR_MESSAGE);
-                    }
-                });
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(null, 
-                    "An unexpected error occurred during logout.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            }
+            dispose(); // Close current window
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    // Create and show new MAIN frame
+                    JFrame frame = new JFrame();
+                    MAIN.setupMainFrame(frame);
+                    frame.setVisible(true);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, 
+                        "Failed to return to main page.",
+                        "Logout Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            });
         });
 
         topPanel.add(logoPanel, BorderLayout.WEST);
@@ -109,12 +117,20 @@ public class OTHER_INFO extends JFrame {
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 20)));
 
         // Sidebar fields
-        sidebarContentWrapper.add(createLabeledFieldSmall("Taxpayer TIN", false));
+        JPanel tinPanel = createLabeledFieldSmall("Taxpayer TIN", false);
+        sidebarContentWrapper.add(tinPanel);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 5)));
-        sidebarContentWrapper.add(createLabeledFieldSmall("Registering Office", false));
+        tinFieldSidebar = getTextFieldFromPanel(tinPanel);
+
+        JPanel regOfficePanel = createLabeledFieldSmall("Registering Office", false);
+        sidebarContentWrapper.add(regOfficePanel);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 5)));
-        sidebarContentWrapper.add(createLabeledFieldSmall("RDO Code", false));
+        registeringOfficeSidebar = getTextFieldFromPanel(regOfficePanel);
+
+        JPanel rdoPanel = createLabeledFieldSmall("RDO Code", false);
+        sidebarContentWrapper.add(rdoPanel);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 20)));
+        rdoCodeSidebar = getTextFieldFromPanel(rdoPanel);
 
         // Navigation buttons with functionality
         JButton taxpayerInfoBtn = createSidebarButton("Taxpayer Information", false);
@@ -126,7 +142,7 @@ public class OTHER_INFO extends JFrame {
             dispose(); // Close current window
             SwingUtilities.invokeLater(() -> {
                 try {
-                    TAX_INFO taxInfo = new TAX_INFO();
+                    TAX_INFO taxInfo = new TAX_INFO(userEmail);
                     taxInfo.setVisible(true);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, 
@@ -145,7 +161,7 @@ public class OTHER_INFO extends JFrame {
             dispose(); // Close current window
             SwingUtilities.invokeLater(() -> {
                 try {
-                    BUS_INFO businessInfo = new BUS_INFO();
+                    BUS_INFO businessInfo = new BUS_INFO(userEmail);
                     businessInfo.setVisible(true);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, 
@@ -167,7 +183,7 @@ public class OTHER_INFO extends JFrame {
         add(sidebar, BorderLayout.WEST);
 
         // Main content panel
-        JPanel mainPanel = new JPanel(new GridBagLayout());
+        mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBackground(Color.WHITE);
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
@@ -176,11 +192,11 @@ public class OTHER_INFO extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.weightx = 1.0;
 
-        // Add form fields based on the image
-        addFormField(mainPanel, gbc, 0, 0, "Spouse Name", "Spouse TIN", "Spouse Employment");
-        addFormField(mainPanel, gbc, 1, 0, "Employer Name", "Spouse Employer TIN", "");
-        addFormField(mainPanel, gbc, 2, 0, "Representative ID", "Representative Name", "Relationship Date");
-        addFormField(mainPanel, gbc, 3, 0, "Address", "Address Type", "Preferred Contact Type");
+        // Add form fields with database column names
+        addFormField(mainPanel, gbc, 0, 0, "SpouseName", "SpouseTIN", "SpouseEmployment");
+        addFormField(mainPanel, gbc, 1, 0, "EmployerName", "SpouseEmployerTIN", "");
+        addFormField(mainPanel, gbc, 2, 0, "RepresentativeID", "RepresentativeName", "RelationshipDate");
+        addFormField(mainPanel, gbc, 3, 0, "Address", "AddressType", "PreferredContactType");
 
         // Edit button
         JButton editButton = new JButton("Edit");
@@ -197,10 +213,28 @@ public class OTHER_INFO extends JFrame {
 
         // Edit button functionality
         editButton.addActionListener(e -> {
-            isEditing = !isEditing;
-            editButton.setText(isEditing ? "Save" : "Edit");
-            toggleEditableFields(mainPanel, isEditing);
+            if (isEditing) {
+                // Currently in Edit mode, so we are about to Save
+                boolean success = saveOtherInfo();
+                if (success) {
+                    isEditing = false;
+                    toggleEditableFields(mainPanel, false);
+                    editButton.setText("Edit");
+                    JOptionPane.showMessageDialog(this, "Data saved successfully.");
+                } else {
+                    // Keep editing if save failed
+                    JOptionPane.showMessageDialog(this, "Failed to save data. Please try again.");
+                }
+            } else {
+                // Switch to Edit mode
+                isEditing = true;
+                toggleEditableFields(mainPanel, true);
+                editButton.setText("Save");
+            }
         });
+
+        // Load initial data
+        loadOtherInfo(userEmail);
 
         add(mainPanel, BorderLayout.CENTER);
 
@@ -227,7 +261,14 @@ public class OTHER_INFO extends JFrame {
             if (!labels[i].isEmpty()) {
                 gbc.gridx = startCol + i;
                 gbc.gridy = row;
-                panel.add(createLabeledField(labels[i]), gbc);
+                JPanel fieldPanel = createLabeledField(labels[i]);
+                panel.add(fieldPanel, gbc);
+                
+                // Store field reference in map with database column name as key
+                JTextField field = getTextFieldFromPanel(fieldPanel);
+                if (field != null) {
+                    formFields.put(labels[i], field);
+                }
             }
         }
     }
@@ -352,10 +393,81 @@ public class OTHER_INFO extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
+    private JTextField getTextFieldFromPanel(JPanel panel) {
+        for (Component comp : panel.getComponents()) {
+            if (comp instanceof JTextField) {
+                return (JTextField) comp;
+            }
+        }
+        return null;
+    }
+
+    private void loadOtherInfo(String email) {
+        String query = "SELECT * FROM taxpayer WHERE email = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, email);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                // Load sidebar info
+                tinFieldSidebar.setText(rs.getString("TaxpayerTIN"));
+                registeringOfficeSidebar.setText(rs.getString("RegisteringOffice"));
+                rdoCodeSidebar.setText(rs.getString("RDOCode"));
+
+                // Load form fields using the map
+                for (Map.Entry<String, JTextField> entry : formFields.entrySet()) {
+                    String columnName = entry.getKey();
+                    JTextField field = entry.getValue();
+                    String value = rs.getString(columnName);
+                    field.setText(value != null ? value : "");
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "No taxpayer found with email: " + email);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error loading taxpayer data: " + e.getMessage());
+        }
+    }
+
+    private boolean saveOtherInfo() {
+        StringBuilder columns = new StringBuilder();
+        List<String> values = new ArrayList<>();
+        
+        for (String columnName : formFields.keySet()) {
+            if (columns.length() > 0) {
+                columns.append(", ");
+            }
+            columns.append(columnName).append(" = ?");
+            values.add(formFields.get(columnName).getText());
+        }
+
+        String updateQuery = "UPDATE taxpayer SET " + columns.toString() + " WHERE email = ?";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(updateQuery)) {
+
+            int paramIndex = 1;
+            for (String value : values) {
+                stmt.setString(paramIndex++, value);
+            }
+            stmt.setString(paramIndex, userEmail);
+
+            int updatedRows = stmt.executeUpdate();
+            return updatedRows > 0;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    /*public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            OTHER_INFO frame = new OTHER_INFO();
+            OTHER_INFO frame = new OTHER_INFO("user@example.com"); // Replace with valid email
             frame.setVisible(true);
         });
-    }
+    }*/
 }

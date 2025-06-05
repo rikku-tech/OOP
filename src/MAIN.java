@@ -2,9 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 
 class MAIN {
-    public static void main(String[] args) {
-        JFrame frame = new JFrame();
-
+    public static void setupMainFrame(JFrame frame) {
         // Load original image
         ImageIcon originalImage = new ImageIcon("C:\\Users\\VON GABRIEL COSTUNA\\git\\OOP\\LOGO.png");
 
@@ -72,6 +70,13 @@ class MAIN {
         frame.setIconImage(originalImage.getImage());
         frame.setSize(1200, 800);
         frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame();
+            setupMainFrame(frame);
+            frame.setVisible(true);
+        });
     }
 }

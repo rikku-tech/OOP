@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.imageio.ImageIO;
 import java.sql.*;
+
 public class TAX_INFO extends JFrame {
     private CircularImagePanel photoPanel;
     private List<JTextField> formFields = new ArrayList<>();  // To hold all JTextFields in form
@@ -16,12 +17,15 @@ public class TAX_INFO extends JFrame {
     private JTextField registeringOfficeSidebar;
     private JTextField rdoCodeSidebar;
     private String userEmail;
+    private final String DB_URL = "jdbc:mysql://localhost:3306/employer_name";
+    private final String DB_USER = "root";
+    private final String DB_PASSWORD = "Vongabriel31!";
 
     public TAX_INFO(String email) {
-    	this.userEmail = email;
-     
+        this.userEmail = email;
+
         ImageIcon originalImage = new ImageIcon("C:\\Users\\VON GABRIEL COSTUNA\\git\\OOP\\LOGO.png");
-     
+
         setTitle("Taxpayer Information");
         setIconImage(originalImage.getImage());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -60,28 +64,20 @@ public class TAX_INFO extends JFrame {
 
         // Add logout button action listener
         logoutButton.addActionListener(e -> {
-            try {
-                // Dispose the TAX_INFO window
-                TAX_INFO.this.dispose();
-                
-                // Ensure the new MAIN frame is created on the Event Dispatch Thread
-                SwingUtilities.invokeLater(() -> {
-                    try {
-                        // Call the MAIN page creation
-                        MAIN.main(new String[]{});
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(null, 
-                            "Failed to redirect to the MAIN page.",
-                            "Logout Error",
-                            JOptionPane.ERROR_MESSAGE);
-                    }
-                });
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(null, 
-                    "An unexpected error occurred during logout.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            }
+            dispose(); // Close current window
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    // Create and show new MAIN frame
+                    JFrame frame = new JFrame();
+                    MAIN.setupMainFrame(frame);
+                    frame.setVisible(true);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, 
+                        "Failed to return to main page.",
+                        "Logout Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            });
         });
 
         topPanel.add(logoPanel, BorderLayout.WEST);
@@ -143,7 +139,7 @@ public class TAX_INFO extends JFrame {
             dispose(); // Close current window
             SwingUtilities.invokeLater(() -> {
                 try {
-                    OTHER_INFO otherInfo = new OTHER_INFO();
+                    OTHER_INFO otherInfo = new OTHER_INFO(userEmail);
                     otherInfo.setVisible(true);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, 
@@ -158,7 +154,7 @@ public class TAX_INFO extends JFrame {
             dispose(); // Close current window
             SwingUtilities.invokeLater(() -> {
                 try {
-                    BUS_INFO businessInfo = new BUS_INFO();
+                    BUS_INFO businessInfo = new BUS_INFO(userEmail);
                     businessInfo.setVisible(true);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, 
@@ -168,6 +164,9 @@ public class TAX_INFO extends JFrame {
                 }
             });
         });
+
+        // Load initial data
+        loadTaxpayerData(userEmail);
 
         sidebarContentWrapper.add(taxpayerInfoBtn);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 12)));
@@ -234,18 +233,6 @@ public class TAX_INFO extends JFrame {
 
         // Add Edit button action listener
         editButton.addActionListener(e -> {
-<<<<<<< HEAD
-            isEditing = !isEditing; // toggle edit mode
-
-            for (JTextField field : formFields) {
-                if (isEditing) {
-                    field.setEditable(true);
-                    field.setFocusable(true);
-                } else {
-                    field.setEditable(false);
-                    field.setFocusable(false);
-                }
-=======
             if (isEditing) {
                 // Currently in Edit mode, so we are about to Save
                 boolean success = saveTaxpayerData();
@@ -253,6 +240,7 @@ public class TAX_INFO extends JFrame {
                     isEditing = false;
                     for (JTextField field : formFields) {
                         field.setEditable(false);
+                        field.setFocusable(false);
                     }
                     editButton.setText("Edit");
                     JOptionPane.showMessageDialog(this, "Data saved successfully.");
@@ -265,11 +253,14 @@ public class TAX_INFO extends JFrame {
                 isEditing = true;
                 for (JTextField field : formFields) {
                     field.setEditable(true);
+                    field.setFocusable(true);
                 }
                 editButton.setText("Save");
->>>>>>> ff131e9833e1a752b7c92f2b752a3612d8385520
             }
         });
+
+        // Load initial data
+        loadTaxpayerData(userEmail);
 
         add(formPanel, BorderLayout.CENTER);
 
@@ -289,8 +280,6 @@ public class TAX_INFO extends JFrame {
                 }
             }
         });
-        loadTaxpayerData(userEmail);  // Replace this with a hardcoded valid TIN from your database
-
     }
 
     private JPanel createLabeledField(String labelText) {
@@ -387,19 +376,15 @@ public class TAX_INFO extends JFrame {
         }
     }
 
-    /*public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            TAX_INFO frame = new TAX_INFO("user@example.com"); // Replace with a valid email or pass dynamically
-            frame.setVisible(true);
-        });
-    }*/
+    private JTextField getTextFieldFromPanel(JPanel panel) {
+        for (Component comp : panel.getComponents()) {
+            if (comp instanceof JTextField) {
+                return (JTextField) comp;
+            }
+        }
+        return null;
+    }
 
-    
-    private final String DB_URL = "jdbc:mysql://localhost:3306/employer_name"; // replace your_database with your DB name
-    private final String DB_USER = "root"; // your DB username
-    private final String DB_PASSWORD = "02162005me"; // your DB password
-
-    // Call this method after initializing the form fields in your constructor (at the end of TAX_INFO constructor)
     private void loadTaxpayerData(String email) {
         String query = "SELECT * FROM taxpayer WHERE email = ?";
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
@@ -430,7 +415,6 @@ public class TAX_INFO extends JFrame {
                 tinFieldSidebar.setText(rs.getString("TaxpayerTIN"));
                 registeringOfficeSidebar.setText(rs.getString("RegisteringOffice"));
                 rdoCodeSidebar.setText(rs.getString("RDOCode"));
-
             } else {
                 JOptionPane.showMessageDialog(this, "No taxpayer found with email: " + email);
             }
@@ -440,15 +424,6 @@ public class TAX_INFO extends JFrame {
         }
     }
 
-    private JTextField getTextFieldFromPanel(JPanel panel) {
-        for (Component comp : panel.getComponents()) {
-            if (comp instanceof JTextField) {
-                return (JTextField) comp;
-            }
-        }
-        return null;
-    }
-    
     private boolean saveTaxpayerData() {
         String updateQuery = "UPDATE taxpayer SET "
                 + "TaxPayerName = ?, "
@@ -466,32 +441,27 @@ public class TAX_INFO extends JFrame {
                 + "OtherCitizenship = ?, "
                 + "MotherMaidenName = ?, "
                 + "FatherName = ? "
-                + "WHERE email = ?";  // or WHERE TaxpayerTIN = ?
+                + "WHERE email = ?";
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(updateQuery)) {
 
-            // Fill parameters based on formFields indexes
             stmt.setString(1, formFields.get(0).getText());  // TaxPayerName
             stmt.setString(2, formFields.get(1).getText());  // TaxpayerType
             stmt.setString(3, formFields.get(2).getText());  // TaxPayerClassification
             stmt.setString(4, formFields.get(3).getText());  // RegisteringOffice
 
-            // Parse and set BirRegistrationDate (Date type)
             String birDateStr = formFields.get(4).getText();
             if (!birDateStr.isEmpty()) {
-                java.sql.Date birDate = java.sql.Date.valueOf(birDateStr); // Format: "yyyy-[m]m-[d]d"
+                java.sql.Date birDate = java.sql.Date.valueOf(birDateStr);
                 stmt.setDate(5, birDate);
             } else {
                 stmt.setNull(5, java.sql.Types.DATE);
             }
 
             stmt.setString(6, formFields.get(5).getText());  // PhilsysCardNumber
-            // Skipping formFields 6 & 7 because you set empty strings (adjust if needed)
-
             stmt.setString(7, formFields.get(8).getText());  // IncomeTaxRateOption
 
-            // Dateofbirth
             String dobStr = formFields.get(9).getText();
             if (!dobStr.isEmpty()) {
                 java.sql.Date dob = java.sql.Date.valueOf(dobStr);
@@ -507,8 +477,7 @@ public class TAX_INFO extends JFrame {
             stmt.setString(13, formFields.get(14).getText()); // OtherCitizenship
             stmt.setString(14, formFields.get(15).getText()); // MotherMaidenName
             stmt.setString(15, formFields.get(16).getText()); // FatherName
-
-            stmt.setString(16, userEmail);  // use email or appropriate key to identify row
+            stmt.setString(16, userEmail);
 
             int updatedRows = stmt.executeUpdate();
             return updatedRows > 0;
@@ -519,5 +488,10 @@ public class TAX_INFO extends JFrame {
         }
     }
 
-
+    /*public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            TAX_INFO frame = new TAX_INFO("user@example.com"); // Replace with a valid email
+            frame.setVisible(true);
+        });
+    }*/
 }
