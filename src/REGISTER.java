@@ -21,7 +21,7 @@ public class REGISTER extends JButton implements ActionListener {
         try {
             String url = "jdbc:mysql://localhost:3306/employer_name";  // Change this
             String user = "root";  // Change this
-            String password = "Vongabriel31!";  // Change this
+            String password = "02162005me";  // Change this
             connection = DriverManager.getConnection(url, user, password);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -234,7 +234,8 @@ public class REGISTER extends JButton implements ActionListener {
                 	    otherCitizenship.getText().trim()   // add otherCitizenship text
                 	);
 
-                boolean businessSuccess = insertBusinessToDatabase(tinVal, tradeBusinessNameVal, lineOfBusinessVal);
+                String generatedBRN = generateTemporaryBRN();
+                boolean businessSuccess = insertBusinessToDatabase(tinVal, tradeBusinessNameVal, lineOfBusinessVal, generatedBRN);
 
 
 
@@ -350,13 +351,18 @@ public class REGISTER extends JButton implements ActionListener {
         }
     }
 
-    public boolean insertBusinessToDatabase(String taxpayerTIN, String tradeBusinessName, String lineOfBusiness) {
-    	String BRN = "TEMP-" + System.currentTimeMillis();
+    private String generateTemporaryBRN() {
+        int randomSixDigit = (int)(Math.random() * 900000) + 100000; 
+        int currentYear = java.time.Year.now().getValue(); 
+        return currentYear + String.valueOf(randomSixDigit);
+    }
 
-    	String sql = "INSERT INTO BussinessInfo (TaxPayerTIN, BussinessRegistrationNumber, TradeBusinessName, LineOfBusiness) VALUES (?, ?, ?, ?)";
+    public boolean insertBusinessToDatabase(String taxpayerTIN, String tradeBusinessName, String lineOfBusiness, String BRN) {
+        String sql = "INSERT INTO BussinessInfo (TaxPayerTIN, BussinessRegistrationNumber, TradeBusinessName, LineOfBusiness) VALUES (?, ?, ?, ?)";
+
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, taxpayerTIN);              // Foreign key
-            ps.setString(2, "BRN");                     // Placeholder for BussinessRegistrationNumber
+            ps.setString(1, taxpayerTIN);
+            ps.setString(2, BRN); // Use passed BRN
             ps.setString(3, tradeBusinessName);
             ps.setString(4, lineOfBusiness);
 

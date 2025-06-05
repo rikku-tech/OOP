@@ -7,16 +7,21 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import javax.imageio.ImageIO;
-
+import java.sql.*;
 public class TAX_INFO extends JFrame {
     private CircularImagePanel photoPanel;
     private List<JTextField> formFields = new ArrayList<>();  // To hold all JTextFields in form
     private boolean isEditing = false; // To track edit state
+    private JTextField tinFieldSidebar;
+    private JTextField registeringOfficeSidebar;
+    private JTextField rdoCodeSidebar;
+    private String userEmail;
 
-    public TAX_INFO() {
-
+    public TAX_INFO(String email) {
+    	this.userEmail = email;
+     
         ImageIcon originalImage = new ImageIcon("C:\\Users\\VON GABRIEL COSTUNA\\git\\OOP\\LOGO.png");
-
+     
         setTitle("Taxpayer Information");
         setIconImage(originalImage.getImage());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -110,12 +115,20 @@ public class TAX_INFO extends JFrame {
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 20)));
         
         // Sidebar fields: Make sure these fields are NOT editable even when toggling edit mode
-        sidebarContentWrapper.add(createLabeledFieldSmall("Taxpayer TIN", false));
+        JPanel tinPanel = createLabeledFieldSmall("Taxpayer TIN", false);
+        sidebarContentWrapper.add(tinPanel);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 5)));
-        sidebarContentWrapper.add(createLabeledFieldSmall("Registering Office", false));
+        tinFieldSidebar = getTextFieldFromPanel(tinPanel);
+
+        JPanel regOfficePanel = createLabeledFieldSmall("Registering Office", false);
+        sidebarContentWrapper.add(regOfficePanel);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 5)));
-        sidebarContentWrapper.add(createLabeledFieldSmall("RDO Code", false));
+        registeringOfficeSidebar = getTextFieldFromPanel(regOfficePanel);
+
+        JPanel rdoPanel = createLabeledFieldSmall("RDO Code", false);
+        sidebarContentWrapper.add(rdoPanel);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 20)));
+        rdoCodeSidebar = getTextFieldFromPanel(rdoPanel);
 
         JButton taxpayerInfoBtn = createSidebarButton("Taxpayer Information", true);
         JButton otherInfoBtn = createSidebarButton("Other Information", false);
@@ -220,14 +233,28 @@ public class TAX_INFO extends JFrame {
 
         // Add Edit button action listener
         editButton.addActionListener(e -> {
-            isEditing = !isEditing; // toggle edit mode
-
-            for (JTextField field : formFields) {
-                field.setEditable(isEditing);
+            if (isEditing) {
+                // Currently in Edit mode, so we are about to Save
+                boolean success = saveTaxpayerData();
+                if (success) {
+                    isEditing = false;
+                    for (JTextField field : formFields) {
+                        field.setEditable(false);
+                    }
+                    editButton.setText("Edit");
+                    JOptionPane.showMessageDialog(this, "Data saved successfully.");
+                } else {
+                    // Keep editing if save failed
+                    JOptionPane.showMessageDialog(this, "Failed to save data. Please try again.");
+                }
+            } else {
+                // Switch to Edit mode
+                isEditing = true;
+                for (JTextField field : formFields) {
+                    field.setEditable(true);
+                }
+                editButton.setText("Save");
             }
-
-            // Optionally, change button text to "Save" or "Edit"
-            editButton.setText(isEditing ? "Save" : "Edit");
         });
 
         add(formPanel, BorderLayout.CENTER);
@@ -248,6 +275,8 @@ public class TAX_INFO extends JFrame {
                 }
             }
         });
+        loadTaxpayerData(userEmail);  // Replace this with a hardcoded valid TIN from your database
+
     }
 
     private JPanel createLabeledField(String labelText) {
@@ -343,10 +372,137 @@ public class TAX_INFO extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
+    /*public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            TAX_INFO frame = new TAX_INFO();
+            TAX_INFO frame = new TAX_INFO("user@example.com"); // Replace with a valid email or pass dynamically
             frame.setVisible(true);
         });
+    }*/
+
+    
+    private final String DB_URL = "jdbc:mysql://localhost:3306/employer_name"; // replace your_database with your DB name
+    private final String DB_USER = "root"; // your DB username
+    private final String DB_PASSWORD = "02162005me"; // your DB password
+
+    // Call this method after initializing the form fields in your constructor (at the end of TAX_INFO constructor)
+    private void loadTaxpayerData(String email) {
+        String query = "SELECT * FROM taxpayer WHERE email = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, email);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                formFields.get(0).setText(rs.getString("TaxPayerName"));
+                formFields.get(1).setText(rs.getString("TaxpayerType"));
+                formFields.get(2).setText(rs.getString("TaxPayerClassification"));
+                formFields.get(3).setText(rs.getString("RegisteringOffice"));
+                formFields.get(4).setText(rs.getDate("BirRegistrationDate") != null ? rs.getDate("BirRegistrationDate").toString() : "");
+                formFields.get(5).setText(rs.getString("PhilsysCardNumber"));
+                formFields.get(6).setText("");
+                formFields.get(7).setText("");
+                formFields.get(8).setText(rs.getString("IncomeTaxRateOption"));
+                formFields.get(9).setText(rs.getDate("Dateofbirth") != null ? rs.getDate("Dateofbirth").toString() : "");
+                formFields.get(10).setText(rs.getString("PlaceOfBirth"));
+                formFields.get(11).setText(rs.getString("Gender"));
+                formFields.get(12).setText(rs.getString("CivilStatus"));
+                formFields.get(13).setText(rs.getString("Citizenship"));
+                formFields.get(14).setText(rs.getString("OtherCitizenship"));
+                formFields.get(15).setText(rs.getString("MotherMaidenName"));
+                formFields.get(16).setText(rs.getString("FatherName"));
+
+                tinFieldSidebar.setText(rs.getString("TaxpayerTIN"));
+                registeringOfficeSidebar.setText(rs.getString("RegisteringOffice"));
+                rdoCodeSidebar.setText(rs.getString("RDOCode"));
+
+            } else {
+                JOptionPane.showMessageDialog(this, "No taxpayer found with email: " + email);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error loading taxpayer data: " + e.getMessage());
+        }
     }
+
+    private JTextField getTextFieldFromPanel(JPanel panel) {
+        for (Component comp : panel.getComponents()) {
+            if (comp instanceof JTextField) {
+                return (JTextField) comp;
+            }
+        }
+        return null;
+    }
+    
+    private boolean saveTaxpayerData() {
+        String updateQuery = "UPDATE taxpayer SET "
+                + "TaxPayerName = ?, "
+                + "TaxpayerType = ?, "
+                + "TaxPayerClassification = ?, "
+                + "RegisteringOffice = ?, "
+                + "BirRegistrationDate = ?, "
+                + "PhilsysCardNumber = ?, "
+                + "IncomeTaxRateOption = ?, "
+                + "Dateofbirth = ?, "
+                + "PlaceOfBirth = ?, "
+                + "Gender = ?, "
+                + "CivilStatus = ?, "
+                + "Citizenship = ?, "
+                + "OtherCitizenship = ?, "
+                + "MotherMaidenName = ?, "
+                + "FatherName = ? "
+                + "WHERE email = ?";  // or WHERE TaxpayerTIN = ?
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(updateQuery)) {
+
+            // Fill parameters based on formFields indexes
+            stmt.setString(1, formFields.get(0).getText());  // TaxPayerName
+            stmt.setString(2, formFields.get(1).getText());  // TaxpayerType
+            stmt.setString(3, formFields.get(2).getText());  // TaxPayerClassification
+            stmt.setString(4, formFields.get(3).getText());  // RegisteringOffice
+
+            // Parse and set BirRegistrationDate (Date type)
+            String birDateStr = formFields.get(4).getText();
+            if (!birDateStr.isEmpty()) {
+                java.sql.Date birDate = java.sql.Date.valueOf(birDateStr); // Format: "yyyy-[m]m-[d]d"
+                stmt.setDate(5, birDate);
+            } else {
+                stmt.setNull(5, java.sql.Types.DATE);
+            }
+
+            stmt.setString(6, formFields.get(5).getText());  // PhilsysCardNumber
+            // Skipping formFields 6 & 7 because you set empty strings (adjust if needed)
+
+            stmt.setString(7, formFields.get(8).getText());  // IncomeTaxRateOption
+
+            // Dateofbirth
+            String dobStr = formFields.get(9).getText();
+            if (!dobStr.isEmpty()) {
+                java.sql.Date dob = java.sql.Date.valueOf(dobStr);
+                stmt.setDate(8, dob);
+            } else {
+                stmt.setNull(8, java.sql.Types.DATE);
+            }
+
+            stmt.setString(9, formFields.get(10).getText());  // PlaceOfBirth
+            stmt.setString(10, formFields.get(11).getText()); // Gender
+            stmt.setString(11, formFields.get(12).getText()); // CivilStatus
+            stmt.setString(12, formFields.get(13).getText()); // Citizenship
+            stmt.setString(13, formFields.get(14).getText()); // OtherCitizenship
+            stmt.setString(14, formFields.get(15).getText()); // MotherMaidenName
+            stmt.setString(15, formFields.get(16).getText()); // FatherName
+
+            stmt.setString(16, userEmail);  // use email or appropriate key to identify row
+
+            int updatedRows = stmt.executeUpdate();
+            return updatedRows > 0;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+
 }
