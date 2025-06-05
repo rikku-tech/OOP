@@ -19,7 +19,7 @@ public class TAX_INFO extends JFrame {
     private String userEmail;
     private final String DB_URL = "jdbc:mysql://localhost:3306/employer_name";
     private final String DB_USER = "root";
-    private final String DB_PASSWORD = "Vongabriel31!";
+    private final String DB_PASSWORD = "02162005me";
 
     public TAX_INFO(String email) {
         this.userEmail = email;
@@ -165,8 +165,7 @@ public class TAX_INFO extends JFrame {
             });
         });
 
-        // Load initial data
-        loadTaxpayerData(userEmail);
+       
 
         sidebarContentWrapper.add(taxpayerInfoBtn);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 12)));
@@ -259,11 +258,12 @@ public class TAX_INFO extends JFrame {
             }
         });
 
-        // Load initial data
-        loadTaxpayerData(userEmail);
 
         add(formPanel, BorderLayout.CENTER);
 
+        // Load initial data
+        loadTaxpayerData(userEmail);
+        
         // Photo upload
         photoPanel.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
