@@ -1,10 +1,16 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
 
 public class LOGIN extends JButton implements ActionListener {
 
     private JFrame mainframe;
+    public static String loggedInEmail = null;  // <-- static field to hold email
 
     public LOGIN(JFrame frame) {
         this.mainframe = frame;
@@ -174,9 +180,46 @@ public class LOGIN extends JButton implements ActionListener {
 
         // Add working redirect to TAX_INFO
         loginButton.addActionListener(ev -> {
-            // Here you could add actual credential checking if needed
-            loginFrame.dispose();  // Close login window
-            new TAX_INFO().setVisible(true);  // Redirect to TAX_INFO
+            String email = emailField.getText();
+            String password = new String(passwordField.getPassword());
+
+            if (email.isEmpty() || password.isEmpty()) {
+                JOptionPane.showMessageDialog(loginFrame, "Please enter both email and password.", "Input Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            try {
+                // Load driver (optional if you're using JDBC 4+)
+                Class.forName("com.mysql.cj.jdbc.Driver");
+
+                // Connect to your database
+                Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/employer_name", "root", "02162005me");
+
+                // Prepare SQL query to check credentials
+                String sql = "SELECT * FROM taxpayer WHERE email = ? AND password = ?";
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.setString(1, email);
+                stmt.setString(2, password);
+
+                ResultSet rs = stmt.executeQuery();
+
+                if (rs.next()) {
+                    loggedInEmail = email;  // Store email for access by other classes
+                    loginFrame.dispose();
+                    new TAX_INFO(loggedInEmail).setVisible(true);  // Pass email here
+                } else {
+                    // No match found
+                    JOptionPane.showMessageDialog(loginFrame, "Invalid email or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+                }
+
+                rs.close();
+                stmt.close();
+                conn.close();
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(loginFrame, "Database error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         // Back Button
@@ -209,4 +252,6 @@ public class LOGIN extends JButton implements ActionListener {
             }
         });
     }
+    
 }
+
