@@ -21,20 +21,26 @@ public class OTHER_INFO extends JFrame {
     private String userEmail;
     private final String DB_URL = "jdbc:mysql://localhost:3306/employer_name";
     private final String DB_USER = "root";
-    private final String DB_PASSWORD = "Vongabriel31!";
+    private final String DB_PASSWORD = "02162005me";
     private Map<String, JTextField> formFields;
+    Map<String, JComponent> spouseFields = new HashMap<>();
+    Map<String, JComponent> authRepFields = new HashMap<>();
+    Map<String, JComponent> taxpayerFields = new HashMap<>();
+    private String taxpayerTIN;
 
+    
+    
     public OTHER_INFO(String email) {
         this.userEmail = email;
         this.formFields = new HashMap<>();
         ImageIcon originalImage = new ImageIcon("C:\\Users\\VON GABRIEL COSTUNA\\git\\OOP\\LOGO.png");
-
         setTitle("Other Information");
         setIconImage(originalImage.getImage());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 650);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
+
 
         // Top panel with logo and logout button
         JPanel topPanel = new JPanel(new BorderLayout());
@@ -186,18 +192,19 @@ public class OTHER_INFO extends JFrame {
         mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBackground(Color.WHITE);
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
-
+        
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.weightx = 1.0;
-
-        // Add form fields with database column names
-        addFormField(mainPanel, gbc, 0, 0, "SpouseName", "SpouseTIN", "SpouseEmployment");
-        addFormField(mainPanel, gbc, 1, 0, "EmployerName", "SpouseEmployerTIN", "");
-        addFormField(mainPanel, gbc, 2, 0, "RepresentativeID", "RepresentativeName", "RelationshipDate");
-        addFormField(mainPanel, gbc, 3, 0, "Address", "AddressType", "PreferredContactType");
-
+        
+        // Add spouse fields
+        addFormField(mainPanel, gbc, 1, 0, spouseFields, "SpouseName", "SpouseTIN", "EmploymentStatusOfSpouse");
+        addFormField(mainPanel, gbc, 2, 0, spouseFields, "SpouseEmployerName", "SpouseEmployerTIN", "");
+        // Add auth rep fields
+        addFormField(mainPanel, gbc, 3, 0, authRepFields, "Representative_ID", "RepresentativeName", "RelationshipDate");
+        addFormField(mainPanel, gbc, 4, 0, authRepFields, "RepresentativeAddress", "AddressType", "PreferredContactType");
+        
         // Edit button
         JButton editButton = new JButton("Edit");
         editButton.setBackground(new Color(138, 43, 226));
@@ -207,14 +214,13 @@ public class OTHER_INFO extends JFrame {
         editButton.setPreferredSize(new Dimension(100, 35));
 
         gbc.gridx = 2;
-        gbc.gridy = 4;
+        gbc.gridy = 5;
         gbc.anchor = GridBagConstraints.EAST;
         mainPanel.add(editButton, gbc);
 
         // Edit button functionality
         editButton.addActionListener(e -> {
             if (isEditing) {
-                // Currently in Edit mode, so we are about to Save
                 boolean success = saveOtherInfo();
                 if (success) {
                     isEditing = false;
@@ -222,11 +228,9 @@ public class OTHER_INFO extends JFrame {
                     editButton.setText("Edit");
                     JOptionPane.showMessageDialog(this, "Data saved successfully.");
                 } else {
-                    // Keep editing if save failed
                     JOptionPane.showMessageDialog(this, "Failed to save data. Please try again.");
                 }
             } else {
-                // Switch to Edit mode
                 isEditing = true;
                 toggleEditableFields(mainPanel, true);
                 editButton.setText("Save");
@@ -255,42 +259,103 @@ public class OTHER_INFO extends JFrame {
             }
         });
     }
-
-    private void addFormField(JPanel panel, GridBagConstraints gbc, int row, int startCol, String... labels) {
-        for (int i = 0; i < labels.length; i++) {
-            if (!labels[i].isEmpty()) {
-                gbc.gridx = startCol + i;
-                gbc.gridy = row;
-                JPanel fieldPanel = createLabeledField(labels[i]);
-                panel.add(fieldPanel, gbc);
-                
-                // Store field reference in map with database column name as key
-                JTextField field = getTextFieldFromPanel(fieldPanel);
-                if (field != null) {
-                    formFields.put(labels[i], field);
-                }
-            }
-        }
-    }
-
     private void toggleEditableFields(JPanel panel, boolean editable) {
         for (Component comp : panel.getComponents()) {
             if (comp instanceof JPanel) {
                 for (Component inner : ((JPanel) comp).getComponents()) {
                     if (inner instanceof JTextField) {
                         JTextField field = (JTextField) inner;
-                        if (editable) {
-                            field.setEditable(true);
-                            field.setFocusable(true);
-                        } else {
+                        // Check if this JTextField belongs to taxpayerFields, don't allow edit
+                        if (taxpayerFields.containsValue(field)) {
                             field.setEditable(false);
                             field.setFocusable(false);
+                        } else {
+                            field.setEditable(editable);
+                            field.setFocusable(editable);
+                        }
+                    } else if (inner instanceof JComboBox) {
+                        JComboBox<?> comboBox = (JComboBox<?>) inner;
+                        // Same logic for JComboBox
+                        if (taxpayerFields.containsValue(comboBox)) {
+                            comboBox.setEnabled(false);
+                        } else {
+                            comboBox.setEnabled(editable);
                         }
                     }
                 }
             }
         }
     }
+
+    
+
+    private void addFormField(JPanel panel, GridBagConstraints gbc, int row, int startCol, Map<String, JComponent> targetMap, String... labels) {
+        Color fieldBgColor = new Color(230, 230, 230);     // Light gray background
+        Color fieldTextColor = new Color(50, 50, 50);      // Darker gray text
+        Color fieldBorderColor = new Color(180, 180, 180); // Medium gray border
+        Font commonFont = new Font("Inter", Font.PLAIN, 12);
+        boolean isEditable = this.isEditing; // Use the current editing state
+
+        for (int i = 0; i < labels.length; i++) {
+            String label = labels[i];
+            if (!label.isEmpty()) {
+                gbc.gridx = startCol + i;
+                gbc.gridy = row;
+                gbc.insets = new Insets(10, 10, 5, 10);
+
+                JPanel fieldPanel = new JPanel(new BorderLayout(0, 4));
+                fieldPanel.setBackground(Color.WHITE);
+
+                JLabel jLabel = new JLabel(label);
+                jLabel.setFont(commonFont);
+                jLabel.setForeground(fieldTextColor);
+                fieldPanel.add(jLabel, BorderLayout.NORTH);
+
+                JComponent inputComponent;
+                String normalizedLabel = label.replaceAll("\\s+", "").toLowerCase();
+
+                if (normalizedLabel.equals("addresstype")) {
+                    JComboBox<String> comboBox = new JComboBox<>(new String[]{"Residences", "Place Business", "Employer Address"});
+                    comboBox.setFont(commonFont);
+                    comboBox.setBackground(fieldBgColor);
+                    comboBox.setForeground(fieldTextColor);
+                    comboBox.setBorder(BorderFactory.createLineBorder(fieldBorderColor, 1));
+                    comboBox.setPreferredSize(new Dimension(200, 25));
+                    comboBox.setEnabled(isEditable);
+                    inputComponent = comboBox;
+                } else if (normalizedLabel.contains("employmentstatus")) {
+                    JComboBox<String> comboBox = new JComboBox<>(new String[]{
+                        "Unemployed", 
+                        "Employed Locally", 
+                        "Employed Abroad", 
+                        "Engaged in Business/Practice of Profession"
+                    });
+                    comboBox.setFont(commonFont);
+                    comboBox.setBackground(fieldBgColor);
+                    comboBox.setForeground(fieldTextColor);
+                    comboBox.setBorder(BorderFactory.createLineBorder(fieldBorderColor, 1));
+                    comboBox.setPreferredSize(new Dimension(200, 25));
+                    comboBox.setEnabled(isEditable);
+                    inputComponent = comboBox;
+                } else {
+                    JTextField textField = new JTextField(15);
+                    textField.setFont(commonFont);
+                    textField.setBackground(fieldBgColor);
+                    textField.setForeground(fieldTextColor);
+                    textField.setBorder(BorderFactory.createLineBorder(fieldBorderColor, 1));
+                    textField.setPreferredSize(new Dimension(200, 25));
+                    textField.setEditable(isEditable);
+                    inputComponent = textField;
+                }
+
+                fieldPanel.add(inputComponent, BorderLayout.CENTER);
+                panel.add(fieldPanel, gbc);
+
+                targetMap.put(label, inputComponent);
+            }
+        }
+    }
+
 
     private JPanel createLabeledField(String labelText) {
         JPanel panel = new JPanel();
@@ -403,66 +468,161 @@ public class OTHER_INFO extends JFrame {
     }
 
     private void loadOtherInfo(String email) {
-        String query = "SELECT * FROM taxpayer WHERE email = ?";
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            // Load taxpayer info using email
+            String taxpayerQuery = "SELECT * FROM taxpayer WHERE email = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(taxpayerQuery)) {
+                stmt.setString(1, email);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    taxpayerTIN = rs.getString("TaxpayerTIN"); // Store TaxpayerTIN
+                    tinFieldSidebar.setText(taxpayerTIN);
+                    registeringOfficeSidebar.setText(rs.getString("RegisteringOffice"));
+                    rdoCodeSidebar.setText(rs.getString("RDOCode"));
 
-            stmt.setString(1, email);
-            ResultSet rs = stmt.executeQuery();
-            
-            if (rs.next()) {
-                // Load sidebar info
-                tinFieldSidebar.setText(rs.getString("TaxpayerTIN"));
-                registeringOfficeSidebar.setText(rs.getString("RegisteringOffice"));
-                rdoCodeSidebar.setText(rs.getString("RDOCode"));
+                    for (Map.Entry<String, JComponent> entry : taxpayerFields.entrySet()) {
+                        String col = entry.getKey();
+                        JComponent comp = entry.getValue();
+                        String value = rs.getString(col) != null ? rs.getString(col) : "";
 
-                // Load form fields using the map
-                for (Map.Entry<String, JTextField> entry : formFields.entrySet()) {
-                    String columnName = entry.getKey();
-                    JTextField field = entry.getValue();
-                    String value = rs.getString(columnName);
-                    field.setText(value != null ? value : "");
+                        if (comp instanceof JTextField textField) {
+                            textField.setText(value);
+                        } else if (comp instanceof JComboBox<?> comboBox) {
+                            comboBox.setSelectedItem(value);
+                        }
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(this, "No taxpayer found with email: " + email);
+                    return;
                 }
-            } else {
-                JOptionPane.showMessageDialog(this, "No taxpayer found with email: " + email);
             }
+
+            // Load spouse info using TaxpayerTIN
+            String spouseQuery = "SELECT * FROM spouse WHERE TaxpayerTIN = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(spouseQuery)) {
+                stmt.setString(1, taxpayerTIN);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    for (Map.Entry<String, JComponent> entry : spouseFields.entrySet()) {
+                        String col = entry.getKey();
+                        JComponent comp = entry.getValue();
+                        String value = rs.getString(col) != null ? rs.getString(col) : "";
+
+                        if (comp instanceof JTextField textField) {
+                            textField.setText(value);
+                        } else if (comp instanceof JComboBox<?> comboBox) {
+                            comboBox.setSelectedItem(value);
+                        }
+                    }
+                }
+            }
+
+            // Load authorized representative info using TaxpayerTIN
+            String authRepQuery = "SELECT * FROM auth_rep WHERE TaxpayerTIN = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(authRepQuery)) {
+                stmt.setString(1, taxpayerTIN);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    for (Map.Entry<String, JComponent> entry : authRepFields.entrySet()) {
+                        String col = entry.getKey();
+                        JComponent comp = entry.getValue();
+                        String value = rs.getString(col) != null ? rs.getString(col) : "";
+
+                        if (comp instanceof JTextField textField) {
+                            textField.setText(value);
+                        } else if (comp instanceof JComboBox<?> comboBox) {
+                            comboBox.setSelectedItem(value);
+                        }
+                    }
+                }
+            }
+
         } catch (SQLException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error loading taxpayer data: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Error loading data: " + e.getMessage());
         }
     }
-
     private boolean saveOtherInfo() {
+        // Save spouseFields
+        if (!saveFields(spouseFields, "spouse", taxpayerTIN)) return false;
+        // Save authRepFields
+        if (!saveFields(authRepFields, "auth_rep", taxpayerTIN)) return false;
+        // Taxpayer fields are not saved here, since they are display-only
+        return true;
+    }
+
+    private boolean saveFields(Map<String, JComponent> fields, String tableName, String taxpayerTIN) {
         StringBuilder columns = new StringBuilder();
+        StringBuilder placeholders = new StringBuilder();
+        StringBuilder updateClause = new StringBuilder();
         List<String> values = new ArrayList<>();
-        
-        for (String columnName : formFields.keySet()) {
-            if (columns.length() > 0) {
-                columns.append(", ");
+
+        for (String columnName : fields.keySet()) {
+            JComponent comp = fields.get(columnName);
+            String value = "";
+
+            if (comp instanceof JTextField textField) {
+                value = textField.getText();
+            } else if (comp instanceof JComboBox<?> comboBox) {
+                Object selected = comboBox.getSelectedItem();
+                value = selected != null ? selected.toString() : "";
             }
-            columns.append(columnName).append(" = ?");
-            values.add(formFields.get(columnName).getText());
+
+            columns.append(columnName).append(", ");
+            placeholders.append("?, ");
+            updateClause.append(columnName).append(" = ?, ");
+            values.add(value);
         }
 
-        String updateQuery = "UPDATE taxpayer SET " + columns.toString() + " WHERE email = ?";
+        // Trim trailing comma and space
+        if (columns.length() == 0) return true;
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(updateQuery)) {
+        String columnList = columns + "TaxpayerTIN";
+        String placeholderList = placeholders + "?";
+        String updateList = updateClause.substring(0, updateClause.length() - 2); // Remove last comma
 
-            int paramIndex = 1;
-            for (String value : values) {
-                stmt.setString(paramIndex++, value);
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            // 1. Check if row exists
+            boolean exists;
+            try (PreparedStatement checkStmt = conn.prepareStatement(
+                    "SELECT 1 FROM " + tableName + " WHERE TaxpayerTIN = ?")) {
+                checkStmt.setString(1, taxpayerTIN);
+                ResultSet rs = checkStmt.executeQuery();
+                exists = rs.next();
             }
-            stmt.setString(paramIndex, userEmail);
 
-            int updatedRows = stmt.executeUpdate();
-            return updatedRows > 0;
+            if (exists) {
+                // 2. UPDATE
+                String updateQuery = "UPDATE " + tableName + " SET " + updateList + " WHERE TaxpayerTIN = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(updateQuery)) {
+                    int i = 1;
+                    for (String value : values) {
+                        stmt.setString(i++, value);
+                    }
+                    stmt.setString(i, taxpayerTIN);
+                    stmt.executeUpdate();
+                }
+            } else {
+                // 3. INSERT
+                String insertQuery = "INSERT INTO " + tableName + " (" + columnList + ") VALUES (" + placeholderList + ")";
+                try (PreparedStatement stmt = conn.prepareStatement(insertQuery)) {
+                    int i = 1;
+                    for (String value : values) {
+                        stmt.setString(i++, value);
+                    }
+                    stmt.setString(i, taxpayerTIN);
+                    stmt.executeUpdate();
+                }
+            }
 
+            return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error saving data: " + ex.getMessage());
             return false;
         }
     }
+
 
     /*public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {

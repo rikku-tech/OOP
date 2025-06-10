@@ -42,26 +42,28 @@ public class REGISTER extends JButton implements ActionListener {
         JFrame frame = new JFrame("Bloc - Register");
         frame.setIconImage(originalImage.getImage());
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setSize(1200, 800);
+        frame.setSize(1300, 700);
         frame.setLocationRelativeTo(null);
 
         JPanel contentPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(6, 20, 6, 20);
+        gbc.insets = new Insets(12, 30, 12, 30);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Title
+        // Title (large, bold, elegant)
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 4;
         JLabel title = new JLabel("Create a BLOC account", SwingConstants.CENTER);
-        title.setFont(new Font("DM Sans", Font.BOLD, 25));
+        title.setFont(new Font("DM Sans", Font.BOLD, 36));
+        title.setForeground(new Color(0x111827)); // dark neutral text
         contentPanel.add(title, gbc);
 
         gbc.gridwidth = 1;
         gbc.gridy++;
 
-        // Left column fields
+        // Inputs data
+
         JTextField tin = new JTextField();
         JTextField rdoCode = new JTextField();
         JTextField fname = new JTextField();
@@ -70,14 +72,26 @@ public class REGISTER extends JButton implements ActionListener {
         JTextField suffix = new JTextField();
         JTextField dob = new JTextField();
         JTextField placeOfBirth = new JTextField();
-        JTextField gender = new JTextField();
-        JTextField civil = new JTextField();
+
+        // Gender dropdown (modern style)
+        String[] genderOptions = {"Male", "Female"};
+        JComboBox<String> genderDropdown = new JComboBox<>(genderOptions);
+        genderDropdown.setBackground(Color.WHITE);
+
+        // Civil Status dropdown
+        String[] civilStatusOptions = {"Single", "Married", "Widowed", "Legally Separated"};
+        JComboBox<String> civilStatusDropdown = new JComboBox<>(civilStatusOptions);
+        civilStatusDropdown.setBackground(Color.WHITE);
+
         JTextField email = new JTextField();
         JPasswordField password = new JPasswordField();
         JPasswordField confirm = new JPasswordField();
 
-        // Right column fields
-        JTextField registeringOffice = new JTextField();
+        // Right column inputs
+        String[] registeringOfficeOptions = {"Head Office", "Branch Office", "Facility"};
+        JComboBox<String> registeringOfficeDropdown = new JComboBox<>(registeringOfficeOptions);
+        registeringOfficeDropdown.setBackground(Color.WHITE);
+
         JTextField philsysCardNumber = new JTextField();
         JTextField localResidence = new JTextField();
         JTextField businessResidence = new JTextField();
@@ -87,6 +101,7 @@ public class REGISTER extends JButton implements ActionListener {
         JTextField citizenship = new JTextField();
         JTextField otherCitizenship = new JTextField();
 
+        // Taxpayer Type dropdown
         String[] taxpayerTypes = {
             "Single Proprietorship Only (Resident Citizen)",
             "Resident Alien - Single Proprietorship",
@@ -107,54 +122,56 @@ public class REGISTER extends JButton implements ActionListener {
         taxpayerTypeDropdown.setMaximumRowCount(8);
         taxpayerTypeDropdown.setBackground(Color.WHITE);
 
+        // Taxpayer Classification dropdown
         String[] taxpayerClassifications = {"Micro", "Small", "Medium", "Large"};
         JComboBox<String> taxpayerClassificationDropdown = new JComboBox<>(taxpayerClassifications);
         taxpayerClassificationDropdown.setBackground(Color.WHITE);
 
+        // Income tax option dropdown
         String[] incomeTaxOptions = {"Yes", "No"};
         JComboBox<String> incomeTaxDropdown = new JComboBox<>(incomeTaxOptions);
         incomeTaxDropdown.setBackground(Color.WHITE);
 
-        // Row counter starts at 1 after title
         int row = 1;
 
-        // Left column
-        addLabeledField("TIN", tin, contentPanel, gbc, 0, row);
-        addLabeledField("Registering Office", registeringOffice, contentPanel, gbc, 2, row++);
+        // Using addLabeledField helper to layout fields
 
+        addLabeledField("TIN", tin, contentPanel, gbc, 0, row);
+        addLabeledField("Registering Office", registeringOfficeDropdown, contentPanel, gbc, 2, row++);
+        
         addLabeledField("RDO Code", rdoCode, contentPanel, gbc, 0, row);
         addLabeledField("Philsys Card Number", philsysCardNumber, contentPanel, gbc, 2, row++);
-
+        
         addLabeledField("First Name", fname, contentPanel, gbc, 0, row);
         addLabeledField("Taxpayer Type", taxpayerTypeDropdown, contentPanel, gbc, 2, row++);
-
+        
         addLabeledField("Middle Name", mname, contentPanel, gbc, 0, row);
         addLabeledField("Taxpayer Classification", taxpayerClassificationDropdown, contentPanel, gbc, 2, row++);
-
+        
         addLabeledField("Last Name", lname, contentPanel, gbc, 0, row);
         addLabeledField("Local Residence", localResidence, contentPanel, gbc, 2, row++);
-
+        
         addLabeledField("Suffix", suffix, contentPanel, gbc, 0, row);
         addLabeledField("Business Residence", businessResidence, contentPanel, gbc, 2, row++);
-
+        
         addLabeledField("Date of Birth", dob, contentPanel, gbc, 0, row);
         addLabeledField("Father's Name", fathersName, contentPanel, gbc, 2, row++);
-
+        
         addLabeledField("Place of Birth", placeOfBirth, contentPanel, gbc, 0, row);
         addLabeledField("Mother's Maiden Name", mothersMaidenName, contentPanel, gbc, 2, row++);
-
-        addLabeledField("Gender", gender, contentPanel, gbc, 0, row);
+        
+        addLabeledField("Gender", genderDropdown, contentPanel, gbc, 0, row);
         addLabeledField("BIR Registration Date", birRegistrationDate, contentPanel, gbc, 2, row++);
-
-        addLabeledField("Civil Status", civil, contentPanel, gbc, 0, row);
+        
+        addLabeledField("Civil Status", civilStatusDropdown, contentPanel, gbc, 0, row);
         addLabeledField("Availing of the 8% income tax rate option?", incomeTaxDropdown, contentPanel, gbc, 2, row++);
-
+        
         addLabeledField("Email", email, contentPanel, gbc, 0, row);
         addLabeledField("Citizenship", citizenship, contentPanel, gbc, 2, row++);
-
+        
         addLabeledField("Password", password, contentPanel, gbc, 0, row);
         addLabeledField("Other Citizenship", otherCitizenship, contentPanel, gbc, 2, row++);
-
+        
         addLabeledField("Confirm Password", confirm, contentPanel, gbc, 0, row++);
 
         // Register button
@@ -181,8 +198,9 @@ public class REGISTER extends JButton implements ActionListener {
                 String mnameVal = mname.getText().trim();
                 String lnameVal = lname.getText().trim();
                 String dobText = dob.getText().trim();
-                String civilVal = civil.getText().trim();
-                String genderVal = gender.getText().trim();
+                String civilVal = civilStatusDropdown.getSelectedItem().toString().trim();
+                String genderVal = genderDropdown.getSelectedItem().toString().trim();
+
                 String emailVal = email.getText().trim();
                 String passwordVal = new String(password.getPassword());
                 String confirmVal = new String(confirm.getPassword());
@@ -194,7 +212,7 @@ public class REGISTER extends JButton implements ActionListener {
                 String fatherNameVal = fathersName.getText().trim();
                 String birRegDateText = birRegistrationDate.getText().trim();
                 String incomeTaxOptionVal = (String) incomeTaxDropdown.getSelectedItem();
-                String registeringOfficeVal = registeringOffice.getText().trim();
+                String registeringOfficeVal = (String) registeringOfficeDropdown.getSelectedItem();
                 String philsysCardNumberVal = philsysCardNumber.getText().trim();
                 String placeOfBirthVal = placeOfBirth.getText().trim();
                 String localResidenceVal = localResidence.getText().trim();
@@ -316,12 +334,13 @@ public class REGISTER extends JButton implements ActionListener {
             String businessResidence
         ) {
         try {
-            String sql = "INSERT INTO taxpayer (" +
-                         "TaxpayerTIN, TaxPayerName, DateOfBirth, CivilStatus, Gender, Email, Password, RdoCode, " +
-                         "TaxpayerType, TaxPayerClassification, MotherMaidenName, FatherName, BIRRegistrationDate, " +
-                         "IncomeTaxRateOption, RegisteringOffice, PhilsysCardNumber, PlaceOfBirth, Citizenship, " +
-                         "OtherCitizenship, LocalResidence, BusinessResidence) " +
-                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        	String sql = "INSERT INTO taxpayer (" +
+                    "TaxpayerTIN, TaxPayerName, DateOfBirth, CivilStatus, Gender, Email, Password, RdoCode, " +
+                    "TaxpayerType, TaxPayerClassification, MotherMaidenName, FatherName, BIRRegistrationDate, " +
+                    "IncomeTaxRateOption, RegisteringOffice, PhilsysCardNumber, PlaceOfBirth, Citizenship, " +
+                    "OtherCitizenship, LocalResidenceAddress, BusinessResidenceAddress) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
 
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setString(1, tin);
@@ -354,3 +373,4 @@ public class REGISTER extends JButton implements ActionListener {
         }
     }
 }
+
