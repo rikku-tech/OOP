@@ -21,15 +21,13 @@ public class OTHER_INFO extends JFrame {
     private String userEmail;
     private final String DB_URL = "jdbc:mysql://localhost:3306/employer_name";
     private final String DB_USER = "root";
-    private final String DB_PASSWORD = "02162005me";
+    private final String DB_PASSWORD = "Vongabriel31!";
     private Map<String, JTextField> formFields;
     Map<String, JComponent> spouseFields = new HashMap<>();
     Map<String, JComponent> authRepFields = new HashMap<>();
     Map<String, JComponent> taxpayerFields = new HashMap<>();
     private String taxpayerTIN;
 
-    
-    
     public OTHER_INFO(String email) {
         this.userEmail = email;
         this.formFields = new HashMap<>();
@@ -40,7 +38,6 @@ public class OTHER_INFO extends JFrame {
         setSize(1000, 650);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-
 
         // Top panel with logo and logout button
         JPanel topPanel = new JPanel(new BorderLayout());
@@ -218,6 +215,20 @@ public class OTHER_INFO extends JFrame {
         gbc.anchor = GridBagConstraints.EAST;
         mainPanel.add(editButton, gbc);
 
+        // Delete button
+        JButton deleteButton = new JButton("Delete");
+        deleteButton.setBackground(new Color(178, 34, 34)); // Lighter dark red (Firebrick)
+        deleteButton.setForeground(Color.WHITE);
+        deleteButton.setFocusPainted(false);
+        deleteButton.setFont(new Font("Inter", Font.BOLD, 14));
+        deleteButton.setPreferredSize(new Dimension(100, 35));
+        deleteButton.setVisible(false); // Initially hidden
+
+        gbc.gridx = 1;
+        gbc.gridy = 5;
+        gbc.anchor = GridBagConstraints.EAST;
+        mainPanel.add(deleteButton, gbc);
+
         // Edit button functionality
         editButton.addActionListener(e -> {
             if (isEditing) {
@@ -226,6 +237,7 @@ public class OTHER_INFO extends JFrame {
                     isEditing = false;
                     toggleEditableFields(mainPanel, false);
                     editButton.setText("Edit");
+                    deleteButton.setVisible(false);
                     JOptionPane.showMessageDialog(this, "Data saved successfully.");
                 } else {
                     JOptionPane.showMessageDialog(this, "Failed to save data. Please try again.");
@@ -234,6 +246,24 @@ public class OTHER_INFO extends JFrame {
                 isEditing = true;
                 toggleEditableFields(mainPanel, true);
                 editButton.setText("Save");
+                deleteButton.setVisible(true);
+            }
+        });
+
+        // Delete button functionality
+        deleteButton.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this record?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                boolean success = deleteOtherInfo();
+                if (success) {
+                    JOptionPane.showMessageDialog(this, "Record deleted successfully.");
+                    // Optionally, clear fields or close window
+                    toggleEditableFields(mainPanel, false);
+                    editButton.setText("Edit");
+                    deleteButton.setVisible(false);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to delete record.");
+                }
             }
         });
 
@@ -259,6 +289,27 @@ public class OTHER_INFO extends JFrame {
             }
         });
     }
+
+    private boolean deleteOtherInfo() {
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String deleteSpouse = "DELETE FROM spouse WHERE TaxpayerTIN = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(deleteSpouse)) {
+                stmt.setString(1, taxpayerTIN);
+                stmt.executeUpdate();
+            }
+            String deleteAuthRep = "DELETE FROM auth_rep WHERE TaxpayerTIN = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(deleteAuthRep)) {
+                stmt.setString(1, taxpayerTIN);
+                stmt.executeUpdate();
+            }
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error deleting data: " + ex.getMessage());
+            return false;
+        }
+    }
+
     private void toggleEditableFields(JPanel panel, boolean editable) {
         for (Component comp : panel.getComponents()) {
             if (comp instanceof JPanel) {
@@ -286,8 +337,6 @@ public class OTHER_INFO extends JFrame {
             }
         }
     }
-
-    
 
     private void addFormField(JPanel panel, GridBagConstraints gbc, int row, int startCol, Map<String, JComponent> targetMap, String... labels) {
         Color fieldBgColor = new Color(230, 230, 230);     // Light gray background
@@ -355,7 +404,6 @@ public class OTHER_INFO extends JFrame {
             }
         }
     }
-
 
     private JPanel createLabeledField(String labelText) {
         JPanel panel = new JPanel();

@@ -18,10 +18,11 @@ public class TAX_INFO extends JFrame {
     private String userEmail;
     private final String DB_URL = "jdbc:mysql://localhost:3306/employer_name";
     private final String DB_USER = "root";
-    private final String DB_PASSWORD = "02162005me";
+    private final String DB_PASSWORD = "Vongabriel31!";
 
     public TAX_INFO(String email) {
         this.userEmail = email;
+        
 
         ImageIcon originalImage = new ImageIcon("C:\\Users\\VON GABRIEL COSTUNA\\git\\OOP\\LOGO.png");
 
@@ -31,6 +32,15 @@ public class TAX_INFO extends JFrame {
         setSize(1100, 750);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
+
+        
+     // Style fix for JComboBox
+        UIManager.put("ComboBox.disabledForeground", Color.BLACK);
+        UIManager.put("ComboBox.background", Color.WHITE);
+        UIManager.put("ComboBox.foreground", Color.BLACK);
+        UIManager.put("ComboBox.selectionBackground", new Color(200, 200, 255));
+        UIManager.put("ComboBox.selectionForeground", Color.BLACK);
+
 
         // Top panel
         JPanel topPanel = new JPanel(new BorderLayout());
@@ -87,6 +97,8 @@ public class TAX_INFO extends JFrame {
         sidebar.setBackground(Color.WHITE);
         sidebar.setLayout(new BorderLayout());
         sidebar.setBorder(BorderFactory.createEmptyBorder(20, 15, 20, 15));
+        
+        
 
         JPanel sidebarContentWrapper = new JPanel();
         sidebarContentWrapper.setLayout(new BoxLayout(sidebarContentWrapper, BoxLayout.Y_AXIS));
@@ -356,17 +368,28 @@ public class TAX_INFO extends JFrame {
 
         JComboBox<String> comboBox = new JComboBox<>(options);
         comboBox.setFont(new Font("Inter", Font.PLAIN, 12));
-        comboBox.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1, true),
-                BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
+        comboBox.setForeground(Color.BLACK);
+        comboBox.setBackground(Color.WHITE);
+        comboBox.setOpaque(true);
+        comboBox.setFocusable(false);
+        comboBox.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1, true));
         comboBox.setPreferredSize(new Dimension(150, 30));
 
+        // Force black font color on disabled state using renderer
+        comboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                setForeground(Color.BLACK);
+                return c;
+            }
+        });
+
+        comboBox.setEnabled(false);
         panel.add(label, BorderLayout.NORTH);
         panel.add(comboBox, BorderLayout.CENTER);
         return panel;
     }
-
     private JPanel createLabeledFieldSmall(String labelText, boolean editable) {
         JPanel panel = new JPanel(new BorderLayout(3, 3));
         panel.setBackground(Color.WHITE);

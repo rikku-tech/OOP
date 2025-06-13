@@ -19,7 +19,7 @@ public class REGISTER extends JButton implements ActionListener {
         try {
             String url = "jdbc:mysql://localhost:3306/employer_name";
             String user = "root";
-            String password = "02162005me";
+            String password = "Vongabriel31!";
             connection = DriverManager.getConnection(url, user, password);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -42,12 +42,14 @@ public class REGISTER extends JButton implements ActionListener {
         JFrame frame = new JFrame("Bloc - Register");
         frame.setIconImage(originalImage.getImage());
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setSize(1300, 700);
+        frame.setSize(1400, 900);
+        frame.setMinimumSize(new Dimension(1200, 800));
         frame.setLocationRelativeTo(null);
+        frame.setResizable(true);
 
         JPanel contentPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(12, 30, 12, 30);
+        gbc.insets = new Insets(8, 20, 8, 20);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Title (large, bold, elegant)
@@ -297,9 +299,9 @@ public class REGISTER extends JButton implements ActionListener {
         label.setFont(new Font("DM Sans", Font.PLAIN, 14));
 
         if (column == 0) {
-            field.setPreferredSize(new Dimension(150, 28));
+            field.setPreferredSize(new Dimension(180, 28));
         } else if (column == 2) {
-            field.setPreferredSize(new Dimension(400, 28));
+            field.setPreferredSize(new Dimension(350, 28));
         }
 
         gbc.gridx = column;
@@ -373,4 +375,3 @@ public class REGISTER extends JButton implements ActionListener {
         }
     }
 }
-

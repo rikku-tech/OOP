@@ -3,11 +3,9 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import javax.imageio.ImageIO;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.sql.*;
 
 public class BUS_INFO extends JFrame {
     private CircularImagePanel photoPanel;
@@ -17,34 +15,34 @@ public class BUS_INFO extends JFrame {
     private JPanel initialPanel;
     private JPanel registrationFormPanel;
     private JPanel viewPanel;
-    private Map<String, JTextField> formFields;
+    private Map<String, JComponent> registrationFormFields = new HashMap<>();
+    private Map<String, JComponent> viewFormFields = new HashMap<>();
     private JTextField tinFieldSidebar;
     private JTextField registeringOfficeSidebar;
     private JTextField rdoCodeSidebar;
     private String userEmail;
     private final String DB_URL = "jdbc:mysql://localhost:3306/employer_name";
     private final String DB_USER = "root";
-    private final String DB_PASSWORD = "02162005me";
-    private Map<String, JComponent> registrationFormFields = new HashMap<>();
-    private Map<String, JComponent> viewFormFields = new HashMap<>();
+    private final String DB_PASSWORD = "Vongabriel31!";
     private String taxpayerTIN;  // store taxpayerTIN here
     private Map<String, JButton> trashButtonsMap = new HashMap<>();
 
     public BUS_INFO(String email) {
         this.userEmail = email;
-        formFields = new HashMap<>();
+
         ImageIcon originalImage = new ImageIcon("C:\\Users\\VON GABRIEL COSTUNA\\git\\OOP\\LOGO.png");
 
         setTitle("Business Information");
         setIconImage(originalImage.getImage());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1000, 650);
+        setSize(1200, 800);
+        setMinimumSize(new Dimension(1200, 800));
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-       
+
         // Top panel with logo and logout button
         createTopPanel();
-       
+
         // Sidebar
         createSidebar();
 
@@ -64,9 +62,6 @@ public class BUS_INFO extends JFrame {
 
         // Show initial panel
         showPanel("INITIAL");
-        showPanel("VIEW");
-        mainContentPanel.revalidate();
-        mainContentPanel.repaint();
 
         add(mainContentPanel, BorderLayout.CENTER);
     }
@@ -97,24 +92,22 @@ public class BUS_INFO extends JFrame {
         logoutButton.setForeground(Color.WHITE);
         logoutButton.setFocusPainted(false);
         logoutButton.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
-        logoutButton.setFont(new Font("Inter", Font.BOLD, 14));
+        logoutButton.setFont(new Font("DM Sans", Font.BOLD, 14));
         logoutButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         logoutButton.setPreferredSize(new Dimension(110, 30));
 
-        // Add logout functionality
         logoutButton.addActionListener(e -> {
-            dispose(); // Close current window
+            dispose();
             SwingUtilities.invokeLater(() -> {
                 try {
-                    // Create and show new MAIN frame
                     JFrame frame = new JFrame();
                     MAIN.setupMainFrame(frame);
                     frame.setVisible(true);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, 
-                        "Failed to return to main page.",
-                        "Logout Error",
-                        JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null,
+                            "Failed to return to main page.",
+                            "Logout Error",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             });
         });
@@ -123,8 +116,6 @@ public class BUS_INFO extends JFrame {
         topPanel.add(logoutButton, BorderLayout.EAST);
         add(topPanel, BorderLayout.NORTH);
     }
-    
-    
 
     private void createSidebar() {
         JPanel sidebar = new JPanel();
@@ -148,7 +139,7 @@ public class BUS_INFO extends JFrame {
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 10)));
 
         JLabel taxpayerName = new JLabel("Taxpayer Name");
-        taxpayerName.setFont(new Font("Inter", Font.BOLD, 14));
+        taxpayerName.setFont(new Font("DM Sans", Font.BOLD, 14));
         taxpayerName.setAlignmentX(Component.CENTER_ALIGNMENT);
         sidebarContentWrapper.add(taxpayerName);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 20)));
@@ -174,7 +165,6 @@ public class BUS_INFO extends JFrame {
         JButton otherInfoBtn = createSidebarButton("Other Information", false);
         JButton businessInfoBtn = createSidebarButton("Business Information", true);
 
-        // Add navigation functionality
         taxpayerInfoBtn.addActionListener(e -> {
             dispose();
             SwingUtilities.invokeLater(() -> {
@@ -182,12 +172,10 @@ public class BUS_INFO extends JFrame {
                     TAX_INFO taxInfo = new TAX_INFO(userEmail);
                     taxInfo.setVisible(true);
                 } catch (Exception ex) {
-                    ex.printStackTrace(); 
-
-                    JOptionPane.showMessageDialog(null, 
-                        "Failed to open Taxpayer Information page.",
-                        "Navigation Error",
-                        JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null,
+                            "Failed to open Taxpayer Information page.",
+                            "Navigation Error",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             });
         });
@@ -196,23 +184,16 @@ public class BUS_INFO extends JFrame {
             dispose();
             SwingUtilities.invokeLater(() -> {
                 try {
-                    OTHER_INFO otherInfo = new OTHER_INFO( this.userEmail);
+                    OTHER_INFO otherInfo = new OTHER_INFO(userEmail);
                     otherInfo.setVisible(true);
                 } catch (Exception ex) {
-                    System.out.println("Exception caught in businessInfoBtn");
-
-                    ex.printStackTrace(); 
-
-                    JOptionPane.showMessageDialog(null, 
-                        "Failed to open Other Information page.",
-                        "Navigation Error",
-                        JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null,
+                            "Failed to open Other Information page.",
+                            "Navigation Error",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             });
         });
-        
-
-
 
         sidebarContentWrapper.add(taxpayerInfoBtn);
         sidebarContentWrapper.add(Box.createRigidArea(new Dimension(0, 12)));
@@ -232,25 +213,21 @@ public class BUS_INFO extends JFrame {
         JPanel centerPanel = new JPanel(new GridBagLayout());
         centerPanel.setBackground(Color.WHITE);
 
-        // Warning icon and message
         ImageIcon warningIcon = new ImageIcon(new BufferedImage(50, 50, BufferedImage.TYPE_INT_ARGB));
         JLabel warningLabel = new JLabel(warningIcon);
         JLabel messageLabel = new JLabel("Oops! It looks like you haven't registered a business yet. Would you like to create one now?");
-        messageLabel.setFont(new Font("Inter", Font.PLAIN, 16));
+        messageLabel.setFont(new Font("DM Sans", Font.PLAIN, 16));
 
-        // Register button
         JButton registerButton = new JButton("Register");
         registerButton.setBackground(new Color(138, 43, 226));
         registerButton.setForeground(Color.WHITE);
-        registerButton.setFont(new Font("Inter", Font.BOLD, 14));
+        registerButton.setFont(new Font("DM Sans", Font.BOLD, 14));
         registerButton.setFocusPainted(false);
         registerButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        registerButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        registerButton.addActionListener(e -> {
-            showPanel("REGISTRATION_FORM");
-        });
+        registerButton.addActionListener(e -> showPanel("REGISTRATION_FORM"));
 
-        // Layout components
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -268,10 +245,6 @@ public class BUS_INFO extends JFrame {
         initialPanel.add(centerPanel, BorderLayout.CENTER);
     }
 
-    
- // Store fields for registration form (both JTextField and JComboBox)
-
-
     private void createRegistrationFormPanel() {
         registrationFormPanel = new JPanel(new BorderLayout());
         registrationFormPanel.setBackground(Color.WHITE);
@@ -286,11 +259,10 @@ public class BUS_INFO extends JFrame {
         gbc.weightx = 1.0;
 
         String[] fields = {
-        	    "Business Registration Number*", "Single Business Number*", "Industry Type*",
-        	    "Trade Business Name*", "Regulatory Body", "Business Registration Date*",
-        	    "Line of Business*"
-        	};
-
+            "Business Registration Number*", "Single Business Number*", "Industry Type*",
+            "Trade Business Name*", "Regulatory Body*", "Business Registration Date*",
+            "Line of Business*"
+        };
 
         int row = 0, col = 0;
         for (String field : fields) {
@@ -320,11 +292,11 @@ public class BUS_INFO extends JFrame {
         JButton registerButton = new JButton("Register");
         registerButton.setBackground(new Color(138, 43, 226));
         registerButton.setForeground(Color.WHITE);
-        registerButton.setFont(new Font("Inter", Font.BOLD, 14));
+        registerButton.setFont(new Font("DM Sans", Font.BOLD, 14));
         registerButton.setFocusPainted(false);
+        registerButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         registerButton.addActionListener(e -> {
-            // Validate required fields
             for (String key : registrationFormFields.keySet()) {
                 JComponent comp = registrationFormFields.get(key);
                 String value = "";
@@ -343,10 +315,8 @@ public class BUS_INFO extends JFrame {
                 }
             }
 
-            // Save to database (stub function)
             boolean success = saveBusinessData();
             if (success) {
-                // Sync data to view panel
                 syncFormData(registrationFormFields, viewFormFields);
                 JOptionPane.showMessageDialog(this, "Business registered successfully!");
                 showPanel("VIEW");
@@ -366,9 +336,7 @@ public class BUS_INFO extends JFrame {
         registrationFormPanel.add(formPanel, BorderLayout.CENTER);
     }
 
-    // Similar createViewPanel with editable toggle and sync support
     private void createViewPanel() {
-        viewFormFields = new HashMap<>();
         viewPanel = new JPanel(new BorderLayout());
         viewPanel.setBackground(Color.WHITE);
         viewPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
@@ -416,8 +384,9 @@ public class BUS_INFO extends JFrame {
         JButton editButton = new JButton("Edit");
         editButton.setBackground(new Color(138, 43, 226));
         editButton.setForeground(Color.WHITE);
-        editButton.setFont(new Font("Inter", Font.BOLD, 14));
+        editButton.setFont(new Font("DM Sans", Font.BOLD, 14));
         editButton.setFocusPainted(false);
+        editButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         editButton.addActionListener(e -> {
             if (!isEditing) {
@@ -444,15 +413,11 @@ public class BUS_INFO extends JFrame {
 
         viewPanel.add(formPanel, BorderLayout.CENTER);
 
-        // Load data stub
         loadSidebarData(userEmail);
     }
 
-
-    // Helper: Toggle editable/focusable for all fields (including JComboBox)
     private void toggleFieldsEditable(Map<String, JComponent> fields, boolean editable) {
         for (Map.Entry<String, JComponent> entry : fields.entrySet()) {
-            String key = entry.getKey();
             JComponent comp = entry.getValue();
             if (comp instanceof JTextField) {
                 JTextField tf = (JTextField) comp;
@@ -462,14 +427,13 @@ public class BUS_INFO extends JFrame {
                 ((JComboBox<?>) comp).setEnabled(editable);
             }
 
-            // Toggle trash button for this field if present (only main panels have trash buttons)
-            JButton trashBtn = trashButtonsMap.get(key);
+            JButton trashBtn = trashButtonsMap.get(entry.getKey());
             if (trashBtn != null) {
                 trashBtn.setEnabled(editable);
             }
         }
     }
-    // Helper: Sync data from source form to target form
+
     private void syncFormData(Map<String, JComponent> source, Map<String, JComponent> target) {
         for (String key : source.keySet()) {
             JComponent sourceComp = source.get(key);
@@ -492,69 +456,125 @@ public class BUS_INFO extends JFrame {
         }
     }
 
-    // Stub: Saving business data - replace with real DB logic
     private boolean saveBusinessData() {
-        System.out.println("Entering saveBusinessData method.");
-        
+        return saveBusinessData(this.taxpayerTIN);
+    }
+
+    private boolean saveBusinessData(String taxpayerTIN) {
         System.out.println("Saving data, current viewFormFields keys:");
         for (String key : viewFormFields.keySet()) {
             System.out.println(" - " + key);
         }
 
+        if (taxpayerTIN == null) {
+            System.err.println("Error: taxpayerTIN is null");
+            JOptionPane.showMessageDialog(null, "Error: Taxpayer TIN is missing.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        int maxTINLength = 11;
+        System.out.println("TaxpayerTIN length: " + taxpayerTIN.length());
+        System.out.println("TaxpayerTIN value: '" + taxpayerTIN + "'");
+        if (taxpayerTIN.length() > maxTINLength) {
+            System.err.println("Error: TaxpayerTIN length exceeds max column length of " + maxTINLength);
+            return false;
+        }
+
+        String[] keys = {
+            "Business Registration Number",
+            "Single Business Number",
+            "Industry Type",
+            "Trade Business Name",
+            "Regulatory Body",
+            "Business Registration Date",
+            "Line of Business"
+        };
+
         String updateQuery = "UPDATE bussinessinfo SET "
-            + "BusinessRegistrationNumber = ?, SingleBusinessNumber = ?, "
-            + "IndustryType = ?, TradeBusinessName = ?, RegulatoryBody = ?, "
-            + "BusinessRegistrationDate = ?, LineOfBusiness = ? "
-            + "WHERE TaxpayerTIN = ?";
+                + "BussinessRegistrationNumber = ?, SingleBusinessNumber = ?, "
+                + "IndustryType = ?, TradeBusinessName = ?, RegulatoryBody = ?, "
+                + "BusinessRegistrationDate = ?, LineOfBusiness = ? "
+                + "WHERE TaxpayerTIN = ?";
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(updateQuery)) {
-
-            String[] keys = {
-                "Business Registration Number",
-                "Single Business Number",
-                "Industry Type",
-                "Trade Business Name", 
-                "Regulatory Body",
-                "Business Registration Date",
-                "Line of Business"
-            };
-
-            // Log taxpayerTIN value
-            System.out.println("Using taxpayerTIN for update: " + taxpayerTIN);
 
             for (int i = 0; i < keys.length; i++) {
                 JComponent comp = viewFormFields.get(keys[i]);
                 String value = "";
                 if (comp == null) {
-                    System.out.println("Missing field in viewFormFields: " + keys[i]);
+                    System.out.println("Missing field: " + keys[i]);
                 } else if (comp instanceof JTextField) {
                     value = ((JTextField) comp).getText();
                 } else if (comp instanceof JComboBox) {
                     Object selected = ((JComboBox<?>) comp).getSelectedItem();
                     value = selected != null ? selected.toString() : "";
                 }
-                stmt.setString(i + 1, value);
-                System.out.println("Setting parameter " + (i + 1) + ": " + value); // Log each parameter value
+
+                if (keys[i].equals("Business Registration Date") && value.trim().isEmpty()) {
+                    stmt.setNull(i + 1, java.sql.Types.VARCHAR);
+                } else {
+                    stmt.setString(i + 1, value);
+                }
+
+                System.out.println("Setting parameter " + (i + 1) + ": " + value);
             }
 
-            stmt.setString(8, taxpayerTIN); // Correctly use taxpayerTIN here
-
-            // Log the final SQL statement (for debugging purposes)
-            System.out.println("Executing update query: " + stmt.toString());
+            stmt.setString(8, taxpayerTIN);
+            System.out.println("Using TaxpayerTIN (WHERE clause): " + taxpayerTIN);
 
             int updatedRows = stmt.executeUpdate();
-            System.out.println("Update executed. Rows updated: " + updatedRows); // Log the result of the update
-            return updatedRows > 0;
+            System.out.println("Update executed. Rows updated: " + updatedRows);
+            if (updatedRows > 0) return true;
 
         } catch (SQLException ex) {
+            System.err.println("SQL Error during update: " + ex.getMessage());
+            ex.printStackTrace();
+            return false;
+        }
+
+        String insertQuery = "INSERT INTO bussinessinfo "
+                + "(TaxpayerTIN, BussinessRegistrationNumber, SingleBusinessNumber, IndustryType, "
+                + "TradeBusinessName, RegulatoryBody, BusinessRegistrationDate, LineOfBusiness) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(insertQuery)) {
+
+            stmt.setString(1, taxpayerTIN);
+
+            for (int i = 0; i < keys.length; i++) {
+                JComponent comp = viewFormFields.get(keys[i]);
+                String value = "";
+                if (comp == null) {
+                    System.out.println("Missing field: " + keys[i]);
+                } else if (comp instanceof JTextField) {
+                    value = ((JTextField) comp).getText();
+                } else if (comp instanceof JComboBox) {
+                    Object selected = ((JComboBox<?>) comp).getSelectedItem();
+                    value = selected != null ? selected.toString() : "";
+                }
+
+                if (keys[i].equals("Business Registration Date") && value.trim().isEmpty()) {
+                    stmt.setNull(i + 2, java.sql.Types.VARCHAR);
+                } else {
+                    stmt.setString(i + 2, value);
+                }
+
+                System.out.println("Setting parameter " + (i + 2) + ": " + value);
+            }
+
+            int insertedRows = stmt.executeUpdate();
+            System.out.println("Insert executed. Rows inserted: " + insertedRows);
+            return insertedRows > 0;
+
+        } catch (SQLException ex) {
+            System.err.println("SQL Error during insert: " + ex.getMessage());
             ex.printStackTrace();
             return false;
         }
     }
 
-
-    
     private void showPanel(String panelName) {
         currentState = panelName;
         CardLayout cl = (CardLayout) mainContentPanel.getLayout();
@@ -562,22 +582,21 @@ public class BUS_INFO extends JFrame {
     }
 
     private JPanel createIndustryTypeField(String labelText) {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout(5, 5));
+        JPanel panel = new JPanel(new BorderLayout(5, 5));
         panel.setBackground(Color.WHITE);
 
         JLabel label = new JLabel(labelText);
-        label.setFont(new Font("Inter", Font.PLAIN, 12));
+        label.setFont(new Font("DM Sans", Font.PLAIN, 12));
 
         JPanel fieldPanel = new JPanel(new BorderLayout());
         fieldPanel.setBackground(Color.WHITE);
 
         String[] options = {"Primary", "Secondary"};
         JComboBox<String> comboBox = new JComboBox<>(options);
-        comboBox.setFont(new Font("Inter", Font.PLAIN, 12));
+        comboBox.setFont(new Font("DM Sans", Font.PLAIN, 12));
         comboBox.setBackground(Color.WHITE);
         comboBox.setPreferredSize(new Dimension(150, 30));
-        
+
         fieldPanel.add(comboBox, BorderLayout.CENTER);
 
         panel.add(label, BorderLayout.NORTH);
@@ -586,91 +605,50 @@ public class BUS_INFO extends JFrame {
     }
 
     private JPanel createLabeledField(String labelText) {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout(5, 5));
+        JPanel panel = new JPanel(new BorderLayout(5, 5));
         panel.setBackground(Color.WHITE);
 
         JLabel label = new JLabel(labelText);
-        label.setFont(new Font("Inter", Font.PLAIN, 12));
+        label.setFont(new Font("DM Sans", Font.PLAIN, 12));
 
-        JPanel fieldPanel = new JPanel(new BorderLayout(5, 0)); // Small gap between field and button
+        JPanel fieldPanel = new JPanel(new BorderLayout(5, 0));
         fieldPanel.setBackground(Color.WHITE);
 
         JTextField field = new JTextField();
-        field.setFont(new Font("Inter", Font.PLAIN, 12));
+        field.setFont(new Font("DM Sans", Font.PLAIN, 12));
         field.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1, true),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1, true),
+                BorderFactory.createEmptyBorder(5, 10, 5, 10)
         ));
         field.setPreferredSize(new Dimension(150, 30));
         field.setEditable(true);
         field.setFocusable(true);
 
-        // Create trash bag button with icon
-        ImageIcon trashIcon = null;
-        try {
-            trashIcon = new ImageIcon(new ImageIcon("")
-                    .getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH)); // Increased size to 40x40
-        } catch (Exception e) {
-            System.err.println("Trash icon image load failed.");
-        }
-
-        JButton trashButton = new JButton(trashIcon);
-        trashButton.setPreferredSize(new Dimension(40, 40)); // Set preferred size
-        trashButton.setFocusPainted(false);
-        trashButton.setBorder(BorderFactory.createEmptyBorder());	
-        trashButton.setContentAreaFilled(false);
-        trashButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        // Fallback if the icon is not loaded
-        if (trashIcon == null || trashIcon.getIconWidth() <= 0 || trashIcon.getIconHeight() <= 0) {
-            trashButton.setText("🗑"); // Unicode trash can emoji as fallback
-            trashButton.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 24)); // Adjust font size for visibility
-            trashButton.setForeground(new Color(128, 0, 0));
-        }
-
-        trashButton.addActionListener(e -> {
-            if (isEditing) { // Only respond if in edit mode
-                field.setText(" "); // Set single space to “delete” content per user request
-            }
-        });
-
         fieldPanel.add(field, BorderLayout.CENTER);
-        fieldPanel.add(trashButton, BorderLayout.EAST); // Trash button on right side
 
         panel.add(label, BorderLayout.NORTH);
         panel.add(fieldPanel, BorderLayout.CENTER);
 
-        // Store trashButton mapped to the labelText key without "*"
-        trashButtonsMap.put(labelText.replace("*", "").trim(), trashButton);
-
         return panel;
     }
 
-
-    // Sidebar small fields remain unchanged - no trash button there as requested
     private JPanel createLabeledFieldSmall(String labelText, boolean editable) {
         JPanel panel = new JPanel(new BorderLayout(3, 3));
         panel.setBackground(Color.WHITE);
 
         JLabel label = new JLabel(labelText);
-        label.setFont(new Font("Inter", Font.PLAIN, 9));
+        label.setFont(new Font("DM Sans", Font.PLAIN, 9));
 
         JTextField field = new JTextField();
-        field.setFont(new Font("Inter", Font.PLAIN, 9));
+        field.setFont(new Font("DM Sans", Font.PLAIN, 9));
         field.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1, true),
-            BorderFactory.createEmptyBorder(2, 5, 2, 5)
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1, true),
+                BorderFactory.createEmptyBorder(2, 5, 2, 5)
         ));
         field.setPreferredSize(new Dimension(80, 18));
         field.setMaximumSize(new Dimension(80, 18));
-        if (editable) {
-            field.setEditable(true);
-            field.setFocusable(true);
-        } else {
-            field.setEditable(false);
-            field.setFocusable(false);
-        }
+        field.setEditable(editable);
+        field.setFocusable(editable);
 
         panel.add(label, BorderLayout.NORTH);
         panel.add(field, BorderLayout.CENTER);
@@ -680,7 +658,7 @@ public class BUS_INFO extends JFrame {
 
     private JButton createSidebarButton(String text, boolean isSelected) {
         JButton button = new JButton(text);
-        button.setFont(new Font("Inter", Font.BOLD, 15));
+        button.setFont(new Font("DM Sans", Font.BOLD, 15));
         button.setBackground(isSelected ? new Color(138, 43, 226) : Color.WHITE);
         button.setForeground(isSelected ? Color.WHITE : Color.BLACK);
         button.setFocusPainted(false);
@@ -735,7 +713,7 @@ public class BUS_INFO extends JFrame {
         }
         return null;
     }
-    
+
     private void loadSidebarData(String email) {
         String query = "SELECT TaxpayerTIN, RegisteringOffice, RDOCode FROM taxpayer WHERE email = ?";
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
@@ -762,28 +740,13 @@ public class BUS_INFO extends JFrame {
             JOptionPane.showMessageDialog(this, "Error loading sidebar data: " + e.getMessage());
         }
     }
-    
-    private void setField(String fieldName, String value) {
-        JComponent comp = viewFormFields.get(fieldName);
-        if (comp != null) {
-            if (comp instanceof JTextField) {
-                ((JTextField) comp).setText(value != null ? value : "");
-                System.out.println(fieldName + " set to: " + ((JTextField) comp).getText());
-            } else if (comp instanceof JComboBox) {
-                ((JComboBox<String>) comp).setSelectedItem(value);
-                System.out.println(fieldName + " set to: " + value);
-            }
-        } else {
-            System.out.println("Field not found in viewFormFields: " + fieldName);
-        }
-    }
 
     private void loadBusinessInfo(String taxpayerTIN) {
         System.out.println("loadBusinessInfo called with TIN: " + taxpayerTIN);
         this.taxpayerTIN = taxpayerTIN; // save TIN for later use
 
-        String query = "SELECT BusinessRegistrationNumber, SingleBusinessNumber, IndustryType, TradeBusinessName, RegulatoryBody, BusinessRegistrationDate, LineOfBusiness " +
-                       "FROM bussinessinfo WHERE TaxpayerTIN = ?"; // Corrected table name
+        String query = "SELECT BussinessRegistrationNumber, SingleBusinessNumber, IndustryType, TradeBusinessName, RegulatoryBody, BusinessRegistrationDate, LineOfBusiness " +
+                       "FROM bussinessinfo WHERE TaxpayerTIN = ?"; // Adjusted column names to match DB
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -794,7 +757,7 @@ public class BUS_INFO extends JFrame {
 
             if (rs.next()) {
                 System.out.println("Data found for TIN: " + taxpayerTIN);
-                setField("Business Registration Number", rs.getString("BusinessRegistrationNumber"));
+                setField("Business Registration Number", rs.getString("BussinessRegistrationNumber"));
                 setField("Single Business Number", rs.getString("SingleBusinessNumber"));
                 setField("Industry Type", rs.getString("IndustryType"));
                 setField("Trade Business Name", rs.getString("TradeBusinessName"));
@@ -815,137 +778,18 @@ public class BUS_INFO extends JFrame {
         }
     }
 
-    
-
-    
-    private boolean saveBusinessData(String taxpayerTIN) {
-        System.out.println("Saving data, current viewFormFields keys:");
-        for (String key : viewFormFields.keySet()) {
-            System.out.println(" - " + key);
-        }
-
-        if (taxpayerTIN == null) {
-            System.err.println("Error: taxpayerTIN is null");
-            JOptionPane.showMessageDialog(null, "Error: Taxpayer TIN is missing.", "Validation Error", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
-
-        int maxTINLength = 11;
-        System.out.println("TaxpayerTIN length: " + taxpayerTIN.length());
-        System.out.println("TaxpayerTIN value: '" + taxpayerTIN + "'");
-        if (taxpayerTIN.length() > maxTINLength) {
-            System.err.println("Error: TaxpayerTIN length exceeds max column length of " + maxTINLength);
-            return false;
-        }
-
-        // Declare keys ONCE for reuse
-        String[] keys = {
-            "Business Registration Number",
-            "Single Business Number",
-            "Industry Type",
-            "Trade Business Name",
-            "Regulatory Body",
-            "Business Registration Date",
-            "Line of Business"
-        };
-
-        // --- UPDATE ---
-        String updateQuery = "UPDATE bussinessinfo SET "
-                + "BusinessRegistrationNumber = ?, SingleBusinessNumber = ?, "
-                + "IndustryType = ?, TradeBusinessName = ?, RegulatoryBody = ?, "
-                + "BusinessRegistrationDate = ?, LineOfBusiness = ? "
-                + "WHERE TaxpayerTIN = ?";
-
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(updateQuery)) {
-
-            for (int i = 0; i < keys.length; i++) {
-                JComponent comp = viewFormFields.get(keys[i]);
-                String value = "";
-                if (comp == null) {
-                    System.out.println("Missing field: " + keys[i]);
-                } else if (comp instanceof JTextField) {
-                    value = ((JTextField) comp).getText();
-                } else if (comp instanceof JComboBox) {
-                    Object selected = ((JComboBox<?>) comp).getSelectedItem();
-                    value = selected != null ? selected.toString() : "";
-                }
-
-                if (keys[i].equals("Business Registration Date") && value.trim().isEmpty()) {
-                    stmt.setNull(i + 1, java.sql.Types.VARCHAR);
-                } else {
-                    stmt.setString(i + 1, value);
-                }
-
-                System.out.println("Setting parameter " + (i + 1) + ": " + value);
+    private void setField(String fieldName, String value) {
+        JComponent comp = viewFormFields.get(fieldName);
+        if (comp != null) {
+            if (comp instanceof JTextField) {
+                ((JTextField) comp).setText(value != null ? value : "");
+                System.out.println(fieldName + " set to: " + ((JTextField) comp).getText());
+            } else if (comp instanceof JComboBox) {
+                ((JComboBox<String>) comp).setSelectedItem(value);
+                System.out.println(fieldName + " set to: " + value);
             }
-
-            stmt.setString(8, taxpayerTIN);
-            System.out.println("Using TaxpayerTIN (WHERE clause): " + taxpayerTIN);
-
-            int updatedRows = stmt.executeUpdate();
-            System.out.println("Update executed. Rows updated: " + updatedRows);
-            if (updatedRows > 0) return true;
-
-        } catch (SQLException ex) {
-            System.err.println("SQL Error during update: " + ex.getMessage());
-            ex.printStackTrace();
-            return false;
-        }
-
-        // --- INSERT ---
-        String insertQuery = "INSERT INTO bussinessinfo "
-                + "(TaxpayerTIN, BusinessRegistrationNumber, SingleBusinessNumber, IndustryType, "
-                + "TradeBusinessName, RegulatoryBody, BusinessRegistrationDate, LineOfBusiness) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(insertQuery)) {
-
-            stmt.setString(1, taxpayerTIN);
-
-            for (int i = 0; i < keys.length; i++) {
-                JComponent comp = viewFormFields.get(keys[i]);
-                String value = "";
-                if (comp == null) {
-                    System.out.println("Missing field: " + keys[i]);
-                } else if (comp instanceof JTextField) {
-                    value = ((JTextField) comp).getText();
-                } else if (comp instanceof JComboBox) {
-                    Object selected = ((JComboBox<?>) comp).getSelectedItem();
-                    value = selected != null ? selected.toString() : "";
-                }
-
-                if (keys[i].equals("Business Registration Date") && value.trim().isEmpty()) {
-                    stmt.setNull(i + 2, java.sql.Types.VARCHAR);
-                } else {
-                    stmt.setString(i + 2, value);
-                }
-
-                System.out.println("Setting parameter " + (i + 2) + ": " + value);
-            }
-
-            int insertedRows = stmt.executeUpdate();
-            System.out.println("Insert executed. Rows inserted: " + insertedRows);
-            return insertedRows > 0;
-
-        } catch (SQLException ex) {
-            System.err.println("SQL Error during insert: " + ex.getMessage());
-            ex.printStackTrace();
-            return false;
+        } else {
+            System.out.println("Field not found in viewFormFields: " + fieldName);
         }
     }
 }
-// In createRegistrationFormPanel() and createViewPanel(), when you call createLabeledField(),
-// the trash button is created and stored to trashButtonsMap automatically.
-
-// No changes required for sidebar because createLabeledFieldSmall() has no trash button,
-// so sidebar fields remain intact and without trash icon.
-
-// This way:
-// - Trash icon shows only in main forms
-// - Clears field text to " " when clicked during edit mode only
-// - Sidebar and email/taxpayerTIN fields unaffected
-
-
-    

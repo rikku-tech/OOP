@@ -12,7 +12,7 @@
 	    public static String loggedInEmail = null;  // <-- static field to hold email
 	    private final String DB_URL = "jdbc:mysql://localhost:3306/employer_name";
 	    private final String DB_USER = "root";
-	    private final String DB_PASSWORD = "02162005me";
+	    private final String DB_PASSWORD = "Vongabriel31!";
 	
 	    public LOGIN(JFrame frame) {
 	        this.mainframe = frame;
