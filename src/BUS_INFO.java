@@ -23,7 +23,7 @@ public class BUS_INFO extends JFrame {
     private String userEmail;
     private final String DB_URL = "jdbc:mysql://localhost:3306/employer_name";
     private final String DB_USER = "root";
-    private final String DB_PASSWORD = "Vongabriel31!";
+    private final String DB_PASSWORD = "02162005me";
     private String taxpayerTIN;  // store taxpayerTIN here
     private Map<String, JButton> trashButtonsMap = new HashMap<>();
 
@@ -59,9 +59,9 @@ public class BUS_INFO extends JFrame {
         mainContentPanel.add(initialPanel, "INITIAL");
         mainContentPanel.add(registrationFormPanel, "REGISTRATION_FORM");
         mainContentPanel.add(viewPanel, "VIEW");
+        loadSidebarData(userEmail);
 
-        // Show initial panel
-        showPanel("INITIAL");
+
 
         add(mainContentPanel, BorderLayout.CENTER);
     }
@@ -226,7 +226,11 @@ public class BUS_INFO extends JFrame {
         registerButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         registerButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        registerButton.addActionListener(e -> showPanel("REGISTRATION_FORM"));
+        registerButton.addActionListener(e -> {
+            showPanel("REGISTRATION_FORM");
+        });
+
+
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -296,7 +300,10 @@ public class BUS_INFO extends JFrame {
         registerButton.setFocusPainted(false);
         registerButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
+     // inside createRegistrationFormPanel()
+
         registerButton.addActionListener(e -> {
+            // Validation
             for (String key : registrationFormFields.keySet()) {
                 JComponent comp = registrationFormFields.get(key);
                 String value = "";
@@ -308,25 +315,27 @@ public class BUS_INFO extends JFrame {
                 }
                 if (value.isEmpty()) {
                     JOptionPane.showMessageDialog(this,
-                            "Please fill in all required fields marked with *",
-                            "Validation Error",
-                            JOptionPane.ERROR_MESSAGE);
+                        "Please fill in all required fields marked with *",
+                        "Validation Error",
+                        JOptionPane.ERROR_MESSAGE);
                     return;
                 }
             }
 
-            boolean success = saveBusinessData();
-            if (success) {
+            // Save
+            boolean saved = performInsert(taxpayerTIN, registrationFormFields);
+            if (saved) {
                 syncFormData(registrationFormFields, viewFormFields);
                 JOptionPane.showMessageDialog(this, "Business registered successfully!");
                 showPanel("VIEW");
             } else {
                 JOptionPane.showMessageDialog(this,
-                        "Failed to register business. Please try again.",
-                        "Registration Error",
-                        JOptionPane.ERROR_MESSAGE);
+                    "Failed to register business. Please try again.",
+                    "Registration Error",
+                    JOptionPane.ERROR_MESSAGE);
             }
         });
+
 
         gbc.gridx = 2;
         gbc.gridy = row + 1;
@@ -394,8 +403,8 @@ public class BUS_INFO extends JFrame {
                 editButton.setText("Save Changes");
                 toggleFieldsEditable(viewFormFields, true);
             } else {
-                boolean success = saveBusinessData(this.taxpayerTIN);
-                if (success) {
+            	boolean saved = performUpdate(taxpayerTIN, viewFormFields);
+            	if (saved) {
                     isEditing = false;
                     editButton.setText("Edit");
                     toggleFieldsEditable(viewFormFields, false);
@@ -455,31 +464,25 @@ public class BUS_INFO extends JFrame {
             }
         }
     }
-
-    private boolean saveBusinessData() {
-        return saveBusinessData(this.taxpayerTIN);
+    
+    private boolean recordExists(String taxpayerTIN) {
+        String query = "SELECT COUNT(*) FROM bussinessinfo WHERE TRIM(TaxpayerTIN) = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, taxpayerTIN.trim());
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
-    private boolean saveBusinessData(String taxpayerTIN) {
-        System.out.println("Saving data, current viewFormFields keys:");
-        for (String key : viewFormFields.keySet()) {
-            System.out.println(" - " + key);
-        }
 
-        if (taxpayerTIN == null) {
-            System.err.println("Error: taxpayerTIN is null");
-            JOptionPane.showMessageDialog(null, "Error: Taxpayer TIN is missing.", "Validation Error", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
 
-        int maxTINLength = 11;
-        System.out.println("TaxpayerTIN length: " + taxpayerTIN.length());
-        System.out.println("TaxpayerTIN value: '" + taxpayerTIN + "'");
-        if (taxpayerTIN.length() > maxTINLength) {
-            System.err.println("Error: TaxpayerTIN length exceeds max column length of " + maxTINLength);
-            return false;
-        }
-
+    private boolean performUpdate(String taxpayerTIN, Map<String, JComponent> formFields) {
         String[] keys = {
             "Business Registration Number",
             "Single Business Number",
@@ -491,7 +494,7 @@ public class BUS_INFO extends JFrame {
         };
 
         String updateQuery = "UPDATE bussinessinfo SET "
-                + "BussinessRegistrationNumber = ?, SingleBusinessNumber = ?, "
+                + "BusinessRegistrationNumber = ?, SingleBusinessNumber = ?, "
                 + "IndustryType = ?, TradeBusinessName = ?, RegulatoryBody = ?, "
                 + "BusinessRegistrationDate = ?, LineOfBusiness = ? "
                 + "WHERE TaxpayerTIN = ?";
@@ -500,86 +503,75 @@ public class BUS_INFO extends JFrame {
              PreparedStatement stmt = conn.prepareStatement(updateQuery)) {
 
             for (int i = 0; i < keys.length; i++) {
-                JComponent comp = viewFormFields.get(keys[i]);
-                String value = "";
-                if (comp == null) {
-                    System.out.println("Missing field: " + keys[i]);
-                } else if (comp instanceof JTextField) {
-                    value = ((JTextField) comp).getText();
-                } else if (comp instanceof JComboBox) {
-                    Object selected = ((JComboBox<?>) comp).getSelectedItem();
-                    value = selected != null ? selected.toString() : "";
-                }
-
+                JComponent comp = formFields.get(keys[i]);
+                String value = extractValue(comp);
                 if (keys[i].equals("Business Registration Date") && value.trim().isEmpty()) {
                     stmt.setNull(i + 1, java.sql.Types.VARCHAR);
                 } else {
                     stmt.setString(i + 1, value);
                 }
-
-                System.out.println("Setting parameter " + (i + 1) + ": " + value);
             }
+            System.out.println("Attempting to insert TIN: " + taxpayerTIN);
 
             stmt.setString(8, taxpayerTIN);
-            System.out.println("Using TaxpayerTIN (WHERE clause): " + taxpayerTIN);
-
             int updatedRows = stmt.executeUpdate();
-            System.out.println("Update executed. Rows updated: " + updatedRows);
-            if (updatedRows > 0) return true;
+            return updatedRows > 0;
 
         } catch (SQLException ex) {
-            System.err.println("SQL Error during update: " + ex.getMessage());
             ex.printStackTrace();
             return false;
         }
+    }
+
+    private boolean performInsert(String taxpayerTIN, Map<String, JComponent> formFields) {
+        String[] keys = {
+            "Business Registration Number",
+            "Single Business Number",
+            "Industry Type",
+            "Trade Business Name",
+            "Regulatory Body",
+            "Business Registration Date",
+            "Line of Business"
+        };
 
         String insertQuery = "INSERT INTO bussinessinfo "
-                + "(TaxpayerTIN, BussinessRegistrationNumber, SingleBusinessNumber, IndustryType, "
+                + "(TaxpayerTIN, BusinessRegistrationNumber, SingleBusinessNumber, IndustryType, "
                 + "TradeBusinessName, RegulatoryBody, BusinessRegistrationDate, LineOfBusiness) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(insertQuery)) {
+        	System.out.println("Attempting to insert TIN: " + taxpayerTIN);
 
             stmt.setString(1, taxpayerTIN);
-
-            for (int i = 0; i < keys.length; i++) {
-                JComponent comp = viewFormFields.get(keys[i]);
-                String value = "";
-                if (comp == null) {
-                    System.out.println("Missing field: " + keys[i]);
-                } else if (comp instanceof JTextField) {
-                    value = ((JTextField) comp).getText();
-                } else if (comp instanceof JComboBox) {
-                    Object selected = ((JComboBox<?>) comp).getSelectedItem();
-                    value = selected != null ? selected.toString() : "";
-                }
-
-                if (keys[i].equals("Business Registration Date") && value.trim().isEmpty()) {
-                    stmt.setNull(i + 2, java.sql.Types.VARCHAR);
+            int paramIndex = 2;
+            for (String key : keys) {
+                JComponent comp = formFields.get(key);
+                String value = extractValue(comp);
+                if (key.equals("Business Registration Date") && value.trim().isEmpty()) {
+                    stmt.setNull(paramIndex, java.sql.Types.VARCHAR);
                 } else {
-                    stmt.setString(i + 2, value);
+                    stmt.setString(paramIndex, value);
                 }
-
-                System.out.println("Setting parameter " + (i + 2) + ": " + value);
+                paramIndex++;
             }
 
             int insertedRows = stmt.executeUpdate();
-            System.out.println("Insert executed. Rows inserted: " + insertedRows);
             return insertedRows > 0;
 
         } catch (SQLException ex) {
-            System.err.println("SQL Error during insert: " + ex.getMessage());
             ex.printStackTrace();
             return false;
         }
     }
 
-    private void showPanel(String panelName) {
-        currentState = panelName;
+
+    private void showPanel(String name) {
         CardLayout cl = (CardLayout) mainContentPanel.getLayout();
-        cl.show(mainContentPanel, panelName);
+        cl.show(mainContentPanel, name);
+        currentState = name;  // Update currentState whenever you switch panels
     }
+
 
     private JPanel createIndustryTypeField(String labelText) {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
@@ -714,50 +706,67 @@ public class BUS_INFO extends JFrame {
         return null;
     }
 
+    private boolean sidebarDataLoaded = false; // Flag to check if sidebar data is loaded
+
     private void loadSidebarData(String email) {
+        // This runs first to fetch the taxpayerTIN
         String query = "SELECT TaxpayerTIN, RegisteringOffice, RDOCode FROM taxpayer WHERE email = ?";
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
             stmt.setString(1, email);
-            System.out.println("Executing query: " + stmt.toString()); // Debugging line
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
                 String taxpayerTIN = rs.getString("TaxpayerTIN");
-                System.out.println("Taxpayer TIN: " + taxpayerTIN); // Debugging line
+                this.taxpayerTIN = taxpayerTIN;
+
                 tinFieldSidebar.setText(taxpayerTIN);
                 registeringOfficeSidebar.setText(rs.getString("RegisteringOffice"));
                 rdoCodeSidebar.setText(rs.getString("RDOCode"));
 
-                // Call business info loader with the TIN
-                loadBusinessInfo(taxpayerTIN);
+                // 🔥 Now we load business info and switch panels accordingly
+                loadBusinessInfo(taxpayerTIN); // This is responsible for showing VIEW or INITIAL
             } else {
                 JOptionPane.showMessageDialog(this, "No taxpayer found with email: " + email);
+                showPanel("INITIAL");
             }
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error loading sidebar data: " + e.getMessage());
+            showPanel("INITIAL");
         }
     }
 
-    private void loadBusinessInfo(String taxpayerTIN) {
-        System.out.println("loadBusinessInfo called with TIN: " + taxpayerTIN);
-        this.taxpayerTIN = taxpayerTIN; // save TIN for later use
+    private boolean businessInfoLoaded = false; // Flag to check if business info is loaded
 
-        String query = "SELECT BussinessRegistrationNumber, SingleBusinessNumber, IndustryType, TradeBusinessName, RegulatoryBody, BusinessRegistrationDate, LineOfBusiness " +
-                       "FROM bussinessinfo WHERE TaxpayerTIN = ?"; // Adjusted column names to match DB
+    private void loadBusinessInfo(String taxpayerTIN) {
+        this.taxpayerTIN = taxpayerTIN; // ✅ Always store it for saving later
+
+    	   if (taxpayerTIN == null || taxpayerTIN.trim().isEmpty()) {
+    	        System.out.println("TIN is null/empty.");
+    	        showPanel("INITIAL");  // fallback
+    	        return;
+    	    }
+    	   
+    	   System.out.println("businessInfoLoaded: " + businessInfoLoaded + ", currentState: " + currentState);
+
+
+        String query = "SELECT BusinessRegistrationNumber, SingleBusinessNumber, IndustryType, TradeBusinessName, RegulatoryBody, BusinessRegistrationDate, LineOfBusiness " +
+                       "FROM bussinessinfo WHERE TaxpayerTIN = ?";
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
             stmt.setString(1, taxpayerTIN);
-            System.out.println("Executing query: " + stmt.toString()); // Debugging line
+            System.out.println("Executing query: " + stmt);
+
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
                 System.out.println("Data found for TIN: " + taxpayerTIN);
-                setField("Business Registration Number", rs.getString("BussinessRegistrationNumber"));
+                // Set field values safely
+                setField("Business Registration Number", rs.getString("BusinessRegistrationNumber"));
                 setField("Single Business Number", rs.getString("SingleBusinessNumber"));
                 setField("Industry Type", rs.getString("IndustryType"));
                 setField("Trade Business Name", rs.getString("TradeBusinessName"));
@@ -765,31 +774,56 @@ public class BUS_INFO extends JFrame {
                 setField("Business Registration Date", rs.getString("BusinessRegistrationDate"));
                 setField("Line of Business", rs.getString("LineOfBusiness"));
 
-                showPanel("VIEW");
-            } else {
-                System.out.println("No data found for TIN: " + taxpayerTIN);
-                showPanel("INITIAL");
-            }
 
+                showPanel("VIEW");  // ✅ show VIEW here only
+                businessInfoLoaded = true;
+                
+            } else {
+                System.out.println("No business data found, showing INITIAL panel.");
+                showPanel("INITIAL");
+                businessInfoLoaded = false;
+            }
         } catch (SQLException e) {
-            System.err.println("SQL Error during loadBusinessInfo: " + e.getMessage());
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error loading business info: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Failed to load business info.");
+            showPanel("INITIAL");
         }
     }
+
 
     private void setField(String fieldName, String value) {
         JComponent comp = viewFormFields.get(fieldName);
         if (comp != null) {
             if (comp instanceof JTextField) {
-                ((JTextField) comp).setText(value != null ? value : "");
-                System.out.println(fieldName + " set to: " + ((JTextField) comp).getText());
+                // Only set non-null and non-empty value to avoid overwriting with empty
+                if (value != null && !value.trim().isEmpty()) {
+                    ((JTextField) comp).setText(value);
+                    System.out.println(fieldName + " set to: " + ((JTextField) comp).getText());
+                } else {
+                    System.out.println(fieldName + " retrieved empty or null, skipping set");
+                }
             } else if (comp instanceof JComboBox) {
-                ((JComboBox<String>) comp).setSelectedItem(value);
-                System.out.println(fieldName + " set to: " + value);
+                if (value != null && !value.trim().isEmpty()) {
+                    ((JComboBox<String>) comp).setSelectedItem(value);
+                    System.out.println(fieldName + " set to: " + value);
+                } else {
+                    System.out.println(fieldName + " retrieved empty or null for JComboBox, skipping set");
+                }
             }
         } else {
             System.out.println("Field not found in viewFormFields: " + fieldName);
         }
     }
+    private String extractValue(JComponent comp) {
+        if (comp instanceof JTextField) {
+            return ((JTextField) comp).getText().trim();
+        } else if (comp instanceof JComboBox<?>) {
+            Object selected = ((JComboBox<?>) comp).getSelectedItem();
+            return selected != null ? selected.toString().trim() : "";
+        }
+        return "";
+    }
+
 }
+
+

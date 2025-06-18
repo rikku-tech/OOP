@@ -18,7 +18,7 @@ public class TAX_INFO extends JFrame {
     private String userEmail;
     private final String DB_URL = "jdbc:mysql://localhost:3306/employer_name";
     private final String DB_USER = "root";
-    private final String DB_PASSWORD = "Vongabriel31!";
+    private final String DB_PASSWORD = "02162005me";
 
     public TAX_INFO(String email) {
         this.userEmail = email;

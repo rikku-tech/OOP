@@ -21,7 +21,7 @@ public class OTHER_INFO extends JFrame {
     private String userEmail;
     private final String DB_URL = "jdbc:mysql://localhost:3306/employer_name";
     private final String DB_USER = "root";
-    private final String DB_PASSWORD = "Vongabriel31!";
+    private final String DB_PASSWORD = "02162005me";
     private Map<String, JTextField> formFields;
     Map<String, JComponent> spouseFields = new HashMap<>();
     Map<String, JComponent> authRepFields = new HashMap<>();
@@ -257,15 +257,20 @@ public class OTHER_INFO extends JFrame {
                 boolean success = deleteOtherInfo();
                 if (success) {
                     JOptionPane.showMessageDialog(this, "Record deleted successfully.");
-                    // Optionally, clear fields or close window
+
+             
+
+                    // ✅ Optionally reset UI state
                     toggleEditableFields(mainPanel, false);
                     editButton.setText("Edit");
                     deleteButton.setVisible(false);
+
                 } else {
                     JOptionPane.showMessageDialog(this, "Failed to delete record.");
                 }
             }
         });
+
 
         // Load initial data
         loadOtherInfo(userEmail);
@@ -308,6 +313,7 @@ public class OTHER_INFO extends JFrame {
             JOptionPane.showMessageDialog(this, "Error deleting data: " + ex.getMessage());
             return false;
         }
+        
     }
 
     private void toggleEditableFields(JPanel panel, boolean editable) {
